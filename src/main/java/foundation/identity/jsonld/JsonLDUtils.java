@@ -59,6 +59,12 @@ public class JsonLDUtils {
 			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
 	}
 
+	public static void jsonLdAddAllStringMap(JsonObjectBuilder jsonObjectBuilder, Map<String, String> map) {
+
+		for (Map.Entry<String, String> entry : map.entrySet())
+			jsonObjectBuilder.add(entry.getKey(), Json.createValue(entry.getValue()));
+	}
+
 	public static void jsonLdAddJsonValue(JsonObjectBuilder jsonObjectBuilder, String term, JsonValue jsonValue) {
 
 		jsonLdAddJsonValueList(jsonObjectBuilder, term, Collections.singletonList(jsonValue));
@@ -137,6 +143,11 @@ public class JsonLDUtils {
 	/*
 	 * get
 	 */
+
+	public static Map<String, JsonValue> jsonLdGetAsJsonValueMap(JsonObject jsonObject) {
+
+		return jsonObject;
+	}
 
 	public static JsonValue jsonLdGetJsonValue(JsonObject jsonObject, String term) {
 

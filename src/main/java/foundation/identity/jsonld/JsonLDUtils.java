@@ -59,6 +59,12 @@ public class JsonLDUtils {
 			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
 	}
 
+	public static void jsonLdAddAllJsonValueMap(JsonObjectBuilder jsonObjectBuilder, Map<String, JsonValue> map) {
+
+		for (Map.Entry<String, JsonValue> entry : map.entrySet())
+			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
+	}
+
 	public static void jsonLdAddAllStringMap(JsonObjectBuilder jsonObjectBuilder, Map<String, String> map) {
 
 		for (Map.Entry<String, String> entry : map.entrySet())

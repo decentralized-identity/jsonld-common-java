@@ -9,10 +9,15 @@ import com.apicatalog.jsonld.lang.Keywords;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.io.nquad.NQuadsWriter;
+import com.github.jsonldjava.core.JsonLdApi;
+import com.github.jsonldjava.core.RDFDataset;
+import com.github.jsonldjava.core.RDFDatasetUtils;
 
 import javax.json.*;
 import javax.json.stream.JsonGenerator;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.*;
 
@@ -23,28 +28,28 @@ public class JsonLDObject {
 	private JsonObject jsonObject;
 
 	protected JsonLDObject(DocumentLoader documentLoader) {
-
 		this.documentLoader = documentLoader;
 		this.jsonObjectBuilder = Json.createObjectBuilder();
 		this.jsonObject = null;
 	}
 
 	public JsonLDObject(DocumentLoader documentLoader, JsonObject jsonObject) {
-
 		this.documentLoader = documentLoader;
 		this.jsonObjectBuilder = null;
 		this.jsonObject = jsonObject;
 	}
 
 	protected JsonLDObject() {
-
 		this((DocumentLoader) null);
 	}
 
 	public JsonLDObject(JsonObject jsonObject) {
-
 		this((DocumentLoader) null, jsonObject);
 	}
+
+	/*
+	 * Factory methods
+	 */
 
 	public static class Builder<T extends Builder<T, J>, J extends JsonLDObject> {
 
@@ -70,6 +75,16 @@ public class JsonLDObject {
 			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
 
 			return this.jsonLDObject;
+		}
+
+		public T template(J template) {
+			JsonLDUtils.jsonLdAddAll(this.jsonLDObject.getJsonObjectBuilder(), template.getJsonObject());
+			return (T) this;
+		}
+
+		public T remove(String term) {
+			JsonLDUtils.jsonLdRemove(this.jsonLDObject.getJsonObjectBuilder(), term);
+			return (T) this;
 		}
 
 		public T contexts(List<String> contexts) {
@@ -99,6 +114,19 @@ public class JsonLDObject {
 	public static Builder builder() {
 
 		return new Builder();
+	}
+
+	/*
+	 * Serialization
+	 */
+
+	public static JsonLDObject fromJson(String json) {
+		return fromJson(new StringReader(json));
+	}
+
+	public static JsonLDObject fromJson(Reader reader) {
+		JsonObject jsonObject = Json.createReader(reader).readObject();
+		return new JsonLDObject(jsonObject);
 	}
 
 	/*
@@ -162,11 +190,18 @@ public class JsonLDObject {
 		jsonWriterFactoryPretty = Json.createWriterFactory(propertiesPretty);
 	}
 
-	public String toRDF() throws JsonLdError, IOException {
+	public String normalize() throws JsonLdError, IOException {
+
+		RDFDataset RDFdataset = RDFDatasetUtils.parseNQuads(this.toNQuads());
+		RDFdataset = (RDFDataset) new JsonLdApi().normalize(RDFdataset);
+		return RDFDatasetUtils.toNQuads(RDFdataset);
+	}
+
+	public String toNQuads() throws JsonLdError, IOException {
 
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.getJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
-		toRdfApi.loader(this.getDocumentLoader());
+		if (this.getDocumentLoader() != null) toRdfApi.loader(this.getDocumentLoader());
 		toRdfApi.ordered(true);
 		RdfDataset rdfDataset = toRdfApi.get();
 

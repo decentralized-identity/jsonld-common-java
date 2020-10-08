@@ -9,9 +9,7 @@ import com.apicatalog.jsonld.lang.Keywords;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.io.nquad.NQuadsWriter;
-import com.github.jsonldjava.core.JsonLdApi;
-import com.github.jsonldjava.core.RDFDataset;
-import com.github.jsonldjava.core.RDFDatasetUtils;
+import foundation.identity.jsonld.normalization.NormalizationAlgorithm;
 
 import javax.json.*;
 import javax.json.stream.JsonGenerator;
@@ -190,20 +188,25 @@ public class JsonLDObject {
 		jsonWriterFactoryPretty = Json.createWriterFactory(propertiesPretty);
 	}
 
-	public String normalize() throws JsonLdError, IOException {
-
-		RDFDataset RDFdataset = RDFDatasetUtils.parseNQuads(this.toNQuads());
-		RDFdataset = (RDFDataset) new JsonLdApi().normalize(RDFdataset);
-		return RDFDatasetUtils.toNQuads(RDFdataset);
-	}
-
-	public String toNQuads() throws JsonLdError, IOException {
+	public RdfDataset toDataset() throws JsonLdError {
 
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.getJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
 		if (this.getDocumentLoader() != null) toRdfApi.loader(this.getDocumentLoader());
 		toRdfApi.ordered(true);
-		RdfDataset rdfDataset = toRdfApi.get();
+		return toRdfApi.get();
+	}
+
+	public String normalize(String version) throws JsonLdError, IOException {
+
+		RdfDataset rdfDataset = this.toDataset();
+
+		return new NormalizationAlgorithm(version).main(rdfDataset);
+	}
+
+	public String toNQuads() throws JsonLdError, IOException {
+
+		RdfDataset rdfDataset = this.toDataset();
 
 		StringWriter stringWriter = new StringWriter();
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);

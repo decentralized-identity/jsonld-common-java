@@ -1,0 +1,25 @@
+<did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd> <https://example.org/examples#degree> _:c14n3 _:c14n4 .
+<http://example.gov/credentials/3732> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/examples#UniversityDegreeCredential> _:c14n4 .
+<http://example.gov/credentials/3732> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.w3.org/2018/credentials#VerifiableCredential> _:c14n4 .
+<http://example.gov/credentials/3732> <https://w3id.org/security#proof> _:c14n1 _:c14n4 .
+<http://example.gov/credentials/3732> <https://www.w3.org/2018/credentials#credentialSubject> <did:key:z6MkjRagNiMu91DduvCvgEsqLZDVzrJzFrwahc4tXLt9DoHd> _:c14n4 .
+<http://example.gov/credentials/3732> <https://www.w3.org/2018/credentials#issuanceDate> "2020-03-10T04:24:12.164Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> _:c14n4 .
+<http://example.gov/credentials/3732> <https://www.w3.org/2018/credentials#issuer> <did:v1:test:nym:z6MkhdmzFu659ZJ4XKj31vtEDmjvsi5yDZG5L7Caz63oP39k> _:c14n4 .
+_:c14n0 <http://purl.org/dc/terms/created> "2020-04-16T17:58:26Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> _:c14n6 .
+_:c14n0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://w3id.org/security#Ed25519Signature2018> _:c14n6 .
+_:c14n0 <https://w3id.org/security#challenge> "99612b24-63d9-11ea-b99f-4f66f3e4f81a" _:c14n6 .
+_:c14n0 <https://w3id.org/security#domain> "issuer.example.com" _:c14n6 .
+_:c14n0 <https://w3id.org/security#jws> "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..FtI4bekQdsVyx9OXcz4a6hL6Y2GAQ9gjA1_nQTmYXLCHenBnap-LlaLlh3DGXdATkXz7Oq5iCRcxTvc4aI7oCg" _:c14n6 .
+_:c14n0 <https://w3id.org/security#proofPurpose> <https://w3id.org/security#authenticationMethod> _:c14n6 .
+_:c14n0 <https://w3id.org/security#verificationMethod> <did:web:vc.transmute.world#z6MksHh7qHWvybLg5QTPPdG2DgEjjduBDArV9EF9mRiRzMBN> _:c14n6 .
+_:c14n2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://www.w3.org/2018/credentials#VerifiablePresentation> .
+_:c14n2 <https://w3id.org/security#proof> _:c14n6 .
+_:c14n2 <https://www.w3.org/2018/credentials#holder> <did:web:vc.transmute.world> .
+_:c14n2 <https://www.w3.org/2018/credentials#verifiableCredential> _:c14n4 .
+_:c14n3 <http://schema.org/name> "Bachelor of Science and Arts"^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML> _:c14n4 .
+_:c14n3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/examples#BachelorDegree> _:c14n4 .
+_:c14n5 <http://purl.org/dc/terms/created> "2019-12-11T03:50:55Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> _:c14n1 .
+_:c14n5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://w3id.org/security#Ed25519Signature2018> _:c14n1 .
+_:c14n5 <https://w3id.org/security#jws> "eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..uzx8px7eGewfc5Qa-GN1qjcYZH4nX3PBBaFW22x_573nnMu_Uzn6oT6ITL54QEk08XCqCE2OX2L-8ovsffXPDg" _:c14n1 .
+_:c14n5 <https://w3id.org/security#proofPurpose> <https://w3id.org/security#assertionMethod> _:c14n1 .
+_:c14n5 <https://w3id.org/security#verificationMethod> <did:v1:test:nym:z6MkhdmzFu659ZJ4XKj31vtEDmjvsi5yDZG5L7Caz63oP39k#z6MkiukuAuQAE8ozxvmahnQGzApvtW7KT5XXKfojjwbdEomY> _:c14n1 .

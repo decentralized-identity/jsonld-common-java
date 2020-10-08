@@ -2,19 +2,24 @@ package foundation.identity.jsonld.normalization;
 
 import com.apicatalog.rdf.*;
 import com.apicatalog.rdf.impl.DefaultRdfProvider;
+import com.apicatalog.rdf.io.nquad.NQuadsWriter;
 import org.apache.commons.codec.binary.Hex;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class NormalizationAlgorithm {
 
+    private static String[] POSITIONS = new String[] { "s", "o", "g" };
+
     private Map<String, Map<String, Object>> blankNodeInfo;
     private Map<String, List<String>> hashToBlankNodes;
     private IdentifierIssuer canonicalIssuer;
     private List<RdfNQuad> quads;
-    private List<String> lines;
+    private String[] lines;
     private String version;
 
     public NormalizationAlgorithm(String version) {
@@ -35,10 +40,12 @@ public class NormalizationAlgorithm {
 
         // 2) For every quad in input dataset:
 
-        for (RdfResource rdfResource : dataset.getGraphNames()) {
-
-            String graphName = rdfResource.getValue();
-            List<RdfTriple> triples = dataset.getGraph(rdfResource).get().toList();
+        Map<String, List<RdfTriple>> graphs = new HashMap<>();
+        graphs.put("@default", dataset.getDefaultGraph().toList());
+        for (RdfResource graphName : dataset.getGraphNames()) graphs.put(graphName.getValue(), dataset.getGraph(graphName).get().toList());
+        for (Map.Entry<String, List<RdfTriple>> graph : graphs.entrySet()) {
+            String graphName = graph.getKey();
+            List<RdfTriple> triples = graph.getValue();
             if ("@default".equals(graphName)) {
                 graphName = "";
             }
@@ -49,20 +56,24 @@ public class NormalizationAlgorithm {
                 RdfResource quadGraphName = null;
                 if (! graphName.equals("")) {
                     if (graphName.indexOf("_:") == 0)
-                        quadGraphName = DefaultRdfProvider.INSTANCE.createBlankNode(graphName);
+                        quadGraphName = NewBlankNode(graphName);
                     else
-                        quadGraphName = DefaultRdfProvider.INSTANCE.createIRI(graphName);
+                        quadGraphName = NewIRI(graphName);
                 }
-                RdfNQuad quad = DefaultRdfProvider.INSTANCE.createNQuad(quadSubject, quadPredicate, quadObject, quadGraphName);
+                RdfNQuad quad = DefaultRdfProvider.INSTANCE.createNQuad(
+                        quadSubject,
+                        quadPredicate,
+                        quadObject,
+                        quadGraphName);
                 this.quads.add(quad);
 
                 // 2.1) For each blank node that occurs in the quad, add
                 // a reference to the quad using the blank node identifier
                 // in the blank node to quads map, creating a new entry if necessary.
 
-                for (RdfValue attrNode : Arrays.asList(new RdfValue[] { quad.getSubject(), quad.getObject(), quad.getGraphName().get() })) {
+                for (RdfValue attrNode : Arrays.asList(quad.getSubject(), quad.getObject(), quad.getGraphName().isEmpty() ? null : quad.getGraphName().get())) {
                     if (attrNode != null) {
-                        if (isBlankNode(attrNode)) {
+                        if (IsBlankNode(attrNode)) {
                             String id = attrNode.getValue();
                             Map<String, Object> bNodeInfo = this.blankNodeInfo.get(id);
                             if (bNodeInfo == null) {
@@ -121,13 +132,13 @@ public class NormalizationAlgorithm {
             // 5.4) For each hash to identifier list mapping in hash to blank
             // nodes map, lexicographically-sorted by hash:
 
-            List<String> sortedHashes = new ArrayList<>(this.hashToBlankNodes.size());
+            String[] sortedHashes = new String[this.hashToBlankNodes.size()];
             int i = 0;
             for (String key : this.hashToBlankNodes.keySet()) {
-                sortedHashes.set(i, key);
+                sortedHashes[i] = key;
                 i++;
             }
-            Collections.sort(sortedHashes);
+            Arrays.sort(sortedHashes);
             for (String hash : sortedHashes) {
                 List<String> idList = this.hashToBlankNodes.get(hash);
 
@@ -161,13 +172,13 @@ public class NormalizationAlgorithm {
         // 6) For each hash to identifier list mapping in hash to blank nodes
         // map, lexicographically-sorted by hash:
 
-        List<String> sortedHashes = new ArrayList<>(this.hashToBlankNodes.size());
+        String[] sortedHashes = new String[this.hashToBlankNodes.size()];
         int i = 0;
         for (String key : this.hashToBlankNodes.keySet()) {
-            sortedHashes.set(i, key);
+            sortedHashes[i] = key;
             i++;
         }
-        Collections.sort(sortedHashes);
+        Arrays.sort(sortedHashes);
         for (String hash : sortedHashes) {
             List<String> idList = this.hashToBlankNodes.get(hash);
 
@@ -215,13 +226,13 @@ public class NormalizationAlgorithm {
             // 6.3) For each result in the hash path list,
             // lexicographically-sorted by the hash in result:
 
-            List<String> sortedHashes2 = new ArrayList<>(hashPaths.size());
+            String[] sortedHashes2 = new String[hashPaths.size()];
             int i2 = 0;
             for (String key : hashPaths.keySet()) {
-                sortedHashes2.set(i2, key);
+                sortedHashes2[i2] = key;
                 i2++;
             }
-            Collections.sort(sortedHashes2);
+            Arrays.sort(sortedHashes2);
             for (String hash3 : sortedHashes2) {
                 for (IdentifierIssuer resultIssuer : hashPaths.get(hash3)) {
 
@@ -243,10 +254,10 @@ public class NormalizationAlgorithm {
         // canonical issuer. Here each quad is updated by assigning each of its
         // blank nodes its new identifier.
 
-
         // 7) For each quad, quad, in input dataset:
 
-        this.lines = new ArrayList<>(this.quads.size());
+        this.lines = new String[this.quads.size()];
+        int i2 = 0;
         for (RdfNQuad quad : this.quads) {
 
             // 7.1) Create a copy, quad copy, of quad and replace any existing blank
@@ -254,31 +265,44 @@ public class NormalizationAlgorithm {
             // canonical issuer.
             // Note: We optimize away the copy here.
 
-            for (RdfValue attrNode : Arrays.asList(new RdfValue[] { quad.getSubject(), quad.getObject(), quad.getGraphName().get() })) {
+            List<RdfValue> copyAttrNodes = new ArrayList<>();
+            for (RdfValue attrNode : Arrays.asList(quad.getSubject(), quad.getObject(), quad.getGraphName().isEmpty() ? null : quad.getGraphName().get())) {
                 if (attrNode != null) {
                     String attrValue = attrNode.getValue();
-                    if (isBlankNode(attrNode) && attrValue.indexOf("_:c14n") != 0) {
-                        RdfDataset.BlankNode bn = (RdfDataset.BlankNode) attrNode;
-                        bn.put("value", this.canonicalIssuer.getId(attrValue));
+                    if (IsBlankNode(attrNode) && attrValue.indexOf("_:c14n") != 0) {
+                        copyAttrNodes.add(NewBlankNode(this.canonicalIssuer.getId(attrValue)));
+                    } else {
+                        copyAttrNodes.add(attrNode);
                     }
+                } else {
+                    copyAttrNodes.add(null);
                 }
             }
+            RdfResource copyGraphName = null;
+            if (copyAttrNodes.get(2) != null) {
+                copyGraphName = (RdfResource) copyAttrNodes.get(2);
+            }
+            RdfNQuad copyQuad = DefaultRdfProvider.INSTANCE.createNQuad(
+                    (RdfResource) copyAttrNodes.get(0),
+                    quad.getPredicate(),
+                    copyAttrNodes.get(1),
+                    copyGraphName
+            );
 
             // 7.2) Add quad copy to the normalized dataset.
 
             String name = null;
-            RdfResource nameVal = quad.getGraphName().get();
-            int i2 = 0;
+            RdfResource nameVal = copyQuad.getGraphName().isEmpty() ? null : copyQuad.getGraphName().get();
             if (nameVal != null) {
                 name = nameVal.getValue();
             }
-            this.lines.set(i2, toNQuad(quad, name));
+            this.lines[i2] = toNQuad(copyQuad, name);
             i2++;
         }
 
         // sort normalized output
 
-        Collections.sort(this.lines);
+        Arrays.sort(this.lines);
     }
 
     public String main(RdfDataset dataset) {
@@ -289,7 +313,7 @@ public class NormalizationAlgorithm {
 
         // 8) Return the normalized dataset.
 
-        return String.join(System.lineSeparator(), this.lines);
+        return String.join("", this.lines);
     }
 
     private String hashFirstDegreeQuad(String id) {
@@ -324,16 +348,16 @@ public class NormalizationAlgorithm {
             // blank node identifier _:a, otherwise, use the blank node
             // identifier _:z.
 
-            RdfValue graphCopy = this.modifyFirstDegreeComponent(id, quad.getGraphName().get(), true);
+            RdfValue graphCopy = this.modifyFirstDegreeComponent(id, quad.getGraphName().isEmpty() ? null : quad.getGraphName().get(), true);
             String name = null;
             if (graphCopy != null) {
                 name = graphCopy.getValue();
             }
 
-            RdfNQuad quadCopy = new RdfNQuad(
-                    this.modifyFirstDegreeComponent(id, quad.getSubject(), true),
+            RdfNQuad quadCopy = NewQuad(
+                    (RdfResource) this.modifyFirstDegreeComponent(id, quad.getSubject(), false),
                     quad.getPredicate(),
-                    this.modifyFirstDegreeComponent(id, quad.getObject(), true),
+                    this.modifyFirstDegreeComponent(id, quad.getObject(), false),
                     name
             );
 
@@ -353,7 +377,7 @@ public class NormalizationAlgorithm {
     }
 
     private RdfValue modifyFirstDegreeComponent(String id, RdfValue component, boolean isGraph) {
-        if (isBlankNode(component)) {
+        if (! IsBlankNode(component)) {
             return component;
         }
         String val = "";
@@ -374,7 +398,7 @@ public class NormalizationAlgorithm {
                 }
             }
         }
-        return this.newBlankNode(val);
+        return NewBlankNode(val);
     }
 
     //4.7) Hash Related Blank Node
@@ -405,7 +429,7 @@ public class NormalizationAlgorithm {
         // quad, and > to input.
 
         if (! "g".equals(position)) {
-            md.update(this.getRelatedPredicate(quad));
+            md.update(this.getRelatedPredicate(quad).getBytes());
         }
 
         // 4) Append identifier to input.
@@ -436,13 +460,13 @@ public class NormalizationAlgorithm {
         // 5) For each related hash to blank node list mapping in hash to
         // related blank nodes map, sorted lexicographically by related hash:
 
-        List<String> sortedHashes = new ArrayList<>(hashToRelated.size());
+        String[] sortedHashes = new String[hashToRelated.size()];
         int i = 0;
         for (String key : hashToRelated.keySet()) {
-            sortedHashes.set(i, key);
+            sortedHashes[i] = key;
             i++;
         }
-        Collections.sort(sortedHashes);
+        Arrays.sort(sortedHashes);
         for (String hash : sortedHashes) {
             List<String> blankNodes = hashToRelated.get(hash);
 
@@ -652,10 +676,10 @@ public class NormalizationAlgorithm {
                 // identified by identifier:
 
                 int i = 0;
-                for (RdfValue attrNode : Arrays.asList(new RdfValue[] { quad.getSubject(), quad.getObject(), quad.getGraphName().get() })) {
+                for (RdfValue attrNode : Arrays.asList(quad.getSubject(), quad.getObject(), quad.getGraphName().isEmpty() ? null : quad.getGraphName().get())) {
                     if (attrNode != null) {
                         String attrValue = attrNode.getValue();
-                        if (isBlankNode(attrNode) && ! id.equals(attrValue)) {
+                        if (IsBlankNode(attrNode) && ! id.equals(attrValue)) {
 
                             // 3.1.1) Set hash to the result of the Hash Related Blank
                             // Node algorithm, passing the blank node identifier for
@@ -665,7 +689,7 @@ public class NormalizationAlgorithm {
                             // respectively.
 
                             related = attrValue;
-                            position = Positions.get(i);
+                            position = POSITIONS[i];
                             String hash = this.hashRelatedBlankNode(related, quad, issuer, position);
 
                             // 3.1.2) Add a mapping of hash to the blank node identifier
@@ -692,10 +716,10 @@ public class NormalizationAlgorithm {
                 // related, quad, path identifier issuer as issuer, and p as
                 // position.
 
-                if (isBlankNode(quad.getSubject()) && ! id.equals(quad.getSubject().getValue())) {
+                if (IsBlankNode(quad.getSubject()) && ! id.equals(quad.getSubject().getValue())) {
                     related = quad.getSubject().getValue();
                     position = "p";
-                } else if (isBlankNode(quad.getObject()) && ! id.equals(quad.getObject().getValue())) {
+                } else if (IsBlankNode(quad.getObject()) && ! id.equals(quad.getObject().getValue())) {
 
                     // 3.2) Otherwise, if quad's object is a blank node that does
                     // not match identifier, to the result of the Hash Related Blank
@@ -808,20 +832,53 @@ public class NormalizationAlgorithm {
         return p;
     }
 
-    private static boolean isBlankNode(RdfValue node) {
-        return node.isBlankNode();
+    private static boolean IsBlankNode(RdfValue node) {
+        return node != null && node.isBlankNode();
     }
 
-    private static RdfResource newBlankNode(String val) {
+    private static RdfResource NewBlankNode(String val) {
         return DefaultRdfProvider.INSTANCE.createBlankNode(val);
     }
-    private static String toNQuad(RdfNQuad quad, String name) {
-        RdfNQuad quadCopy = DefaultRdfProvider.INSTANCE.createNQuad(
+
+    private static RdfResource NewIRI(String val) {
+        return DefaultRdfProvider.INSTANCE.createIRI(val);
+    }
+
+    private static RdfNQuad NewQuad(RdfResource subject, RdfResource predicate, RdfValue object, String graphName) {
+        RdfResource graph = null;
+        if (graphName != null && ! "".equals(graphName) && ! "@default".equals(graphName)) {
+
+            // TODO: i'm not yet sure if this should be added or if the
+            // graph should only be represented by the keys in the dataset
+
+            if (graphName.startsWith("_:")) {
+                graph = NewBlankNode(graphName);
+            } else {
+                graph = NewIRI(graphName);
+            }
+        }
+        return DefaultRdfProvider.INSTANCE.createNQuad(
+                subject,
+                predicate,
+                object,
+                graph);
+    }
+
+    private static String toNQuad(RdfNQuad quad, String graphName) {
+        RdfNQuad quadCopy = NewQuad(
                 quad.getSubject(),
                 quad.getPredicate(),
                 quad.getObject(),
-                DefaultRdfProvider.INSTANCE.createIRI(name)
+                graphName
         );
+        StringWriter writer = new StringWriter();
+        NQuadsWriter nQuadsWriter = new NQuadsWriter(writer);
+        try {
+            nQuadsWriter.write(quadCopy);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        return writer.toString();
     }
 }
 

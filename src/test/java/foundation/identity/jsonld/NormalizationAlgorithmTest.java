@@ -23,8 +23,8 @@ public class NormalizationAlgorithmTest {
 	@SuppressWarnings("unchecked")
 	public void testNormalizationSigned() throws Throwable {
 
-		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("signed.rsa.jsonld")));
-		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.rsa.normalized"));
+		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.jsonld")));
+		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.normalized"));
 
 		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
 	}

@@ -13,6 +13,8 @@ import java.util.*;
 
 public class NormalizationAlgorithm {
 
+    public enum Version { URDNA2015, URGNA2012 };
+
     private static String[] POSITIONS = new String[] { "s", "o", "g" };
 
     private Map<String, Map<String, Object>> blankNodeInfo;
@@ -20,9 +22,9 @@ public class NormalizationAlgorithm {
     private IdentifierIssuer canonicalIssuer;
     private List<RdfNQuad> quads;
     private String[] lines;
-    private String version;
+    private Version version;
 
-    public NormalizationAlgorithm(String version) {
+    public NormalizationAlgorithm(Version version) {
 
         this.blankNodeInfo  = new HashMap<>();
         this.canonicalIssuer = new IdentifierIssuer("_:c14n");
@@ -381,7 +383,7 @@ public class NormalizationAlgorithm {
             return component;
         }
         String val = "";
-        if ("URDNA2015".equals(this.version)) {
+        if (Version.URDNA2015 == this.version) {
             if (id.equals(component.getValue())) {
                 val = "_:a";
             } else {
@@ -621,7 +623,7 @@ public class NormalizationAlgorithm {
 
     private MessageDigest createHash() {
         try {
-            if ("URDNA2015".equals(this.version)) {
+            if (Version.URDNA2015 == this.version) {
                 return MessageDigest.getInstance("SHA-256");
             } else {
                 return MessageDigest.getInstance("SHA-1");
@@ -644,7 +646,7 @@ public class NormalizationAlgorithm {
     // helper for getting a related predicate
 
     private String getRelatedPredicate(RdfNQuad quad) {
-        if ("URDNA2015".equals(this.version)) {
+        if (Version.URDNA2015 == this.version) {
             return "<" + quad.getPredicate().getValue() + ">";
         } else {
             return quad.getPredicate().getValue();
@@ -668,7 +670,7 @@ public class NormalizationAlgorithm {
         // 3) For each quad in quads:
 
         String related, position;
-        if ("URDNA2015".equals(this.version)) {
+        if (Version.URDNA2015 == this.version) {
             for (RdfNQuad quad : quads) {
 
                 // 3.1) For each component in quad, if component is the subject,

@@ -54,25 +54,21 @@ public class JsonLDUtils {
 	 */
 
 	public static void jsonLdAddAll(JsonObjectBuilder jsonObjectBuilder, JsonObject jsonObject) {
-
 		for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet())
 			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
 	}
 
 	public static void jsonLdAddAllJsonValueMap(JsonObjectBuilder jsonObjectBuilder, Map<String, JsonValue> map) {
-
 		for (Map.Entry<String, JsonValue> entry : map.entrySet())
 			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
 	}
 
 	public static void jsonLdAddAllStringMap(JsonObjectBuilder jsonObjectBuilder, Map<String, String> map) {
-
 		for (Map.Entry<String, String> entry : map.entrySet())
 			jsonObjectBuilder.add(entry.getKey(), Json.createValue(entry.getValue()));
 	}
 
 	public static void jsonLdAddJsonValue(JsonObjectBuilder jsonObjectBuilder, String term, JsonValue jsonValue) {
-
 		jsonLdAddJsonValueList(jsonObjectBuilder, term, Collections.singletonList(jsonValue));
 	}
 

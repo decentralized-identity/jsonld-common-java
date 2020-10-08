@@ -143,7 +143,7 @@ public class JsonLDObject {
 		return this.jsonObjectBuilder;
 	}
 
-	public JsonObject getJsonObject() {
+	public synchronized JsonObject getJsonObject() {
 		if (this.jsonObject != null) return this.jsonObject;
 		JsonObject jsonObject = this.jsonObjectBuilder.build();
 		this.jsonObjectBuilder = Json.createObjectBuilder();
@@ -197,33 +197,28 @@ public class JsonLDObject {
 		return toRdfApi.get();
 	}
 
-	public String normalize(String version) throws JsonLdError, IOException {
-
-		RdfDataset rdfDataset = this.toDataset();
-
-		return new NormalizationAlgorithm(version).main(rdfDataset);
-	}
-
 	public String toNQuads() throws JsonLdError, IOException {
 
 		RdfDataset rdfDataset = this.toDataset();
-
 		StringWriter stringWriter = new StringWriter();
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
 		nQuadsWriter.write(rdfDataset);
-
 		return stringWriter.toString();
+	}
+
+	public String normalize(NormalizationAlgorithm.Version version) throws JsonLdError, IOException {
+
+		RdfDataset rdfDataset = this.toDataset();
+		return new NormalizationAlgorithm(version).main(rdfDataset);
 	}
 
 	public String toJson(boolean pretty) {
 
 		JsonWriterFactory jsonWriterFactory = pretty ? JsonLDObject.jsonWriterFactoryPretty : JsonLDObject.jsonWriterFactory;
-
 		StringWriter stringWriter = new StringWriter();
 		JsonWriter jsonWriter = jsonWriterFactory.createWriter(stringWriter);
 		jsonWriter.writeObject(this.getJsonObject());
 		jsonWriter.close();
-
 		return stringWriter.toString();
 	}
 

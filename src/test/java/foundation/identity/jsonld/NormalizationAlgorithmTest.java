@@ -1,5 +1,6 @@
 package foundation.identity.jsonld;
 
+import foundation.identity.jsonld.normalization.NormalizationAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
@@ -15,7 +16,7 @@ public class NormalizationAlgorithmTest {
 		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.jsonld")));
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize("URDNA2015"));
+		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
 	}
 
 	@Test
@@ -25,7 +26,7 @@ public class NormalizationAlgorithmTest {
 		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("signed.rsa.jsonld")));
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.rsa.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize("URDNA2015"));
+		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
 	}
 
 	@Test
@@ -35,7 +36,7 @@ public class NormalizationAlgorithmTest {
 		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.jsonld")));
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize("URDNA2015"));
+		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
 	}
 
 	@Test
@@ -45,6 +46,6 @@ public class NormalizationAlgorithmTest {
 		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.jsonld")));
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize("URDNA2015"));
+		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
 	}
 }

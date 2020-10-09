@@ -36,6 +36,7 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     }
 
     public ConfigurableDocumentLoader(Map<URI, JsonDocument> localCache) {
+        if (localCache == null) throw new NullPointerException();
         this.localCache = localCache;
     }
 

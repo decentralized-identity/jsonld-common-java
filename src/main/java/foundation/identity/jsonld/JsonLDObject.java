@@ -17,9 +17,18 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JsonLDObject {
+
+	public static final URI[] DEFAULT_JSONLD_CONTEXTS = new URI[] { };
+	public static final String[] DEFAULT_JSONLD_TYPES = new String[] { };
+	public static final String DEFAULT_JSONLD_PREDICATE = null;
 
 	private DocumentLoader documentLoader;
 	private JsonObjectBuilder jsonObjectBuilder;
@@ -51,26 +60,24 @@ public class JsonLDObject {
 
 	public static class Builder<T extends Builder<T, J>, J extends JsonLDObject> {
 
-		private List<String> contexts;
-		private String id;
+		private List<URI> contexts;
 		private List<String> types;
+		private String id;
 
 		protected J jsonLDObject;
 
-		private Builder() {
-			this((J) new JsonLDObject());
-		}
-
-		protected Builder(J jsonLDObject) {
+		protected Builder(J jsonLDObject, boolean addContexts) {
 			this.jsonLDObject = jsonLDObject;
+			this.contexts(addContexts ? JsonLDObject.getDefaultJsonLDContexts(jsonLDObject.getClass()): Collections.emptyList());
+			this.types(JsonLDObject.getDefaultJsonLDTypes(jsonLDObject.getClass()));
 		}
 
 		public J build() {
 
 			// add JSON-LD properties
-			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), Keywords.CONTEXT, this.contexts);
-			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_ID, this.id);
+			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), Keywords.CONTEXT, this.contexts.stream().map(x -> x.toString()).collect(Collectors.toList()));
 			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_ID, this.id);
 
 			return this.jsonLDObject;
 		}
@@ -85,18 +92,13 @@ public class JsonLDObject {
 			return (T) this;
 		}
 
-		public T contexts(List<String> contexts) {
-			this.contexts = new ArrayList<String> (contexts);
+		public T contexts(List<URI> contexts) {
+			this.contexts = new ArrayList<URI> (contexts);
 			return (T) this;
 		}
 
-		public T context(String context) {
+		public T context(URI context) {
 			return this.contexts(Collections.singletonList(context));
-		}
-
-		public T id(String id) {
-			this.id = id;
-			return (T) this;
 		}
 
 		public T types(List<String> types) {
@@ -107,24 +109,75 @@ public class JsonLDObject {
 		public T type(String type) {
 			return this.types(Collections.singletonList(type));
 		}
+
+		public T id(String id) {
+			this.id = id;
+			return (T) this;
+		}
 	}
 
 	public static Builder builder() {
-
-		return new Builder();
+		return new Builder(new JsonLDObject(), false);
 	}
 
 	/*
-	 * Serialization
+	 * Reading the JSON-LD object
 	 */
 
-	public static JsonLDObject fromJson(String json) {
-		return fromJson(new StringReader(json));
+	public static <C extends JsonLDObject> C fromJson(Class<C> cl, Reader reader) {
+		JsonObject jsonObject = Json.createReader(reader).readObject();
+		try {
+			Constructor constructor = cl.getConstructor(JsonObject.class);
+			return (C) constructor.newInstance(jsonObject);
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+			throw new Error(ex);
+		}
 	}
 
 	public static JsonLDObject fromJson(Reader reader) {
-		JsonObject jsonObject = Json.createReader(reader).readObject();
-		return new JsonLDObject(jsonObject);
+		return fromJson(JsonLDObject.class, reader);
+	}
+
+	public static <C extends JsonLDObject> C fromJson(Class<C> cl, String json) {
+		return fromJson(cl, new StringReader(json));
+	}
+
+	public static JsonLDObject fromJson(String json) {
+		return fromJson(JsonLDObject.class, json);
+	}
+
+	/*
+	 * Adding, getting, and removing the JSON-LD object
+	 */
+
+	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
+		String term = getDefaultJsonLDPredicate(this.getClass());
+		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject.getJsonObjectBuilder(), term, jsonLdObject.getJsonObject());
+	}
+
+	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {
+		String term = getDefaultJsonLDPredicate(cl);
+		JsonObject jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
+		if (jsonObject == null) return null;
+		try {
+			Constructor constructor = cl.getConstructor(JsonObject.class);
+			return (C) constructor.newInstance(jsonObject);
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+			throw new Error(ex);
+		}
+	}
+
+	public static JsonLDObject getFromJsonLDObject(JsonLDObject jsonLdObject) {
+		return getFromJsonLDObject(JsonLDObject.class, jsonLdObject);
+	}
+
+	public static <C extends JsonLDObject> void removeFromJsonLdObject(Class<C> cl, JsonLDObject jsonLdObject) {
+		String term = getDefaultJsonLDPredicate(cl);
+		JsonLDUtils.jsonLdRemove(jsonLdObject.getJsonObjectBuilder(), term);
+	}
+
+	public static void removeFromJsonLdObject(JsonLDObject jsonLdObject) {
+		removeFromJsonLdObject(JsonLDObject.class, jsonLdObject);
 	}
 
 	/*
@@ -155,10 +208,6 @@ public class JsonLDObject {
 		return JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), Keywords.CONTEXT);
 	}
 
-	public final String getId() {
-		return JsonLDUtils.jsonLdGetString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_ID);
-	}
-
 	public final List<String> getTypes() {
 		return JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_TYPE);
 	}
@@ -169,7 +218,10 @@ public class JsonLDObject {
 
 	public final boolean isType(String type) {
 		return JsonLDUtils.jsonLdContainsString(this.getJsonObject(), type);
+	}
 
+	public final String getId() {
+		return JsonLDUtils.jsonLdGetString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_ID);
 	}
 
 	/*
@@ -225,6 +277,37 @@ public class JsonLDObject {
 	public String toJson() {
 
 		return this.toJson(false);
+	}
+
+	/*
+	 * Helper methods
+	 */
+
+	private static <C extends JsonLDObject> List<URI> getDefaultJsonLDContexts(Class<C> cl) {
+		try {
+			Field field = cl.getField("DEFAULT_JSONLD_CONTEXTS");
+			return Arrays.asList((URI[]) field.get(null));
+		} catch (IllegalAccessException | NoSuchFieldException ex) {
+			throw new Error(ex);
+		}
+	}
+
+	private static <C extends JsonLDObject> List<String> getDefaultJsonLDTypes(Class<C> cl) {
+		try {
+			Field field = cl.getField("DEFAULT_JSONLD_TYPES");
+			return Arrays.asList((String[]) field.get(null));
+		} catch (IllegalAccessException | NoSuchFieldException ex) {
+			throw new Error(ex);
+		}
+	}
+
+	private static <C extends JsonLDObject> String getDefaultJsonLDPredicate(Class<C> cl) {
+		try {
+			Field field = cl.getField("DEFAULT_JSONLD_PREDICATE");
+			return (String) field.get(null);
+		} catch (IllegalAccessException | NoSuchFieldException ex) {
+			throw new Error(ex);
+		}
 	}
 
 	/*

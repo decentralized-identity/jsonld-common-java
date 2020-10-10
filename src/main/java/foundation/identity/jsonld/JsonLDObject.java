@@ -217,7 +217,7 @@ public class JsonLDObject {
 	}
 
 	public final boolean isType(String type) {
-		return JsonLDUtils.jsonLdContainsString(this.getJsonObject(), type);
+		return JsonLDUtils.jsonLdContainsString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_TYPE, type);
 	}
 
 	public final String getId() {
@@ -240,16 +240,20 @@ public class JsonLDObject {
 		jsonWriterFactoryPretty = Json.createWriterFactory(propertiesPretty);
 	}
 
-	public RdfDataset toDataset() throws JsonLdError {
+	public RdfDataset toDataset() throws JsonLDException {
 
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.getJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
 		if (this.getDocumentLoader() != null) toRdfApi.loader(this.getDocumentLoader());
 		toRdfApi.ordered(true);
-		return toRdfApi.get();
+		try {
+			return toRdfApi.get();
+		} catch (JsonLdError ex) {
+			throw new JsonLDException(ex);
+		}
 	}
 
-	public String toNQuads() throws JsonLdError, IOException {
+	public String toNQuads() throws JsonLDException, IOException {
 
 		RdfDataset rdfDataset = this.toDataset();
 		StringWriter stringWriter = new StringWriter();
@@ -258,7 +262,7 @@ public class JsonLDObject {
 		return stringWriter.toString();
 	}
 
-	public String normalize(NormalizationAlgorithm.Version version) throws JsonLdError, IOException {
+	public String normalize(NormalizationAlgorithm.Version version) throws JsonLDException {
 
 		RdfDataset rdfDataset = this.toDataset();
 		return new NormalizationAlgorithm(version).main(rdfDataset);

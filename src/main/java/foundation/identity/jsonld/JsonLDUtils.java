@@ -212,7 +212,7 @@ public class JsonLDUtils {
 
 	public static List<String> jsonLdGetStringList(JsonObject jsonObject, String term) {
 
-		JsonValue entry = jsonObject.get(JsonLDKeywords.JSONLD_TERM_TYPE);
+		JsonValue entry = jsonObject.get(term);
 		if (entry == null) return null;
 
 		if (entry instanceof JsonString) {
@@ -228,9 +228,9 @@ public class JsonLDUtils {
 	 * contains
 	 */
 
-	public static boolean jsonLdContainsString(JsonObject jsonObject, String value) {
+	public static boolean jsonLdContainsString(JsonObject jsonObject, String term, String value) {
 
-		JsonValue entry = jsonObject.get(JsonLDKeywords.JSONLD_TERM_TYPE);
+		JsonValue entry = jsonObject.get(term);
 		if (entry == null) return false;
 
 		if (entry instanceof JsonString)

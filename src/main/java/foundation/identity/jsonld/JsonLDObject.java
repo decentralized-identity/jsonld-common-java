@@ -23,6 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class JsonLDObject {
 
@@ -32,18 +33,15 @@ public class JsonLDObject {
 
 	private DocumentLoader documentLoader;
 	private JsonObjectBuilder jsonObjectBuilder;
-	private JsonObject jsonObject;
 
 	protected JsonLDObject(DocumentLoader documentLoader) {
 		this.documentLoader = documentLoader;
 		this.jsonObjectBuilder = Json.createObjectBuilder();
-		this.jsonObject = null;
 	}
 
 	public JsonLDObject(DocumentLoader documentLoader, JsonObject jsonObject) {
 		this.documentLoader = documentLoader;
-		this.jsonObjectBuilder = null;
-		this.jsonObject = jsonObject;
+		this.jsonObjectBuilder = Json.createObjectBuilder(jsonObject);
 	}
 
 	protected JsonLDObject() {
@@ -60,24 +58,26 @@ public class JsonLDObject {
 
 	public static class Builder<T extends Builder<T, J>, J extends JsonLDObject> {
 
+		private boolean defaultContexts = false;
+		private boolean defaultTypes = false;
 		private List<URI> contexts;
 		private List<String> types;
-		private String id;
+		private URI id;
 
 		protected J jsonLDObject;
 
-		protected Builder(J jsonLDObject, boolean addContexts) {
+		protected Builder(J jsonLDObject) {
 			this.jsonLDObject = jsonLDObject;
-			this.contexts(addContexts ? JsonLDObject.getDefaultJsonLDContexts(jsonLDObject.getClass()): Collections.emptyList());
-			this.types(JsonLDObject.getDefaultJsonLDTypes(jsonLDObject.getClass()));
 		}
 
 		public J build() {
 
 			// add JSON-LD properties
-			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), Keywords.CONTEXT, this.contexts.stream().map(x -> x.toString()).collect(Collectors.toList()));
+			if (this.defaultContexts) { if (this.contexts == null) this.contexts = new ArrayList<>(); this.contexts.addAll(0, JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); }
+			if (this.defaultTypes) { if (this.types == null) this.types = new ArrayList<>(); this.types.addAll(0, JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); }
+			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
 			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
-			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_ID, this.id);
+			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
 			return this.jsonLDObject;
 		}
@@ -92,6 +92,11 @@ public class JsonLDObject {
 			return (T) this;
 		}
 
+		public T defaultContexts(boolean defaultContexts) {
+			this.defaultContexts = defaultContexts;
+			return (T) this;
+		}
+
 		public T contexts(List<URI> contexts) {
 			this.contexts = new ArrayList<URI> (contexts);
 			return (T) this;
@@ -99,6 +104,11 @@ public class JsonLDObject {
 
 		public T context(URI context) {
 			return this.contexts(Collections.singletonList(context));
+		}
+
+		public T defaultTypes(boolean defaultTypes) {
+			this.defaultTypes = defaultTypes;
+			return (T) this;
 		}
 
 		public T types(List<String> types) {
@@ -110,14 +120,14 @@ public class JsonLDObject {
 			return this.types(Collections.singletonList(type));
 		}
 
-		public T id(String id) {
+		public T id(URI id) {
 			this.id = id;
 			return (T) this;
 		}
 	}
 
 	public static Builder builder() {
-		return new Builder(new JsonLDObject(), false);
+		return new Builder(new JsonLDObject());
 	}
 
 	/*
@@ -127,8 +137,8 @@ public class JsonLDObject {
 	public static <C extends JsonLDObject> C fromJson(Class<C> cl, Reader reader) {
 		JsonObject jsonObject = Json.createReader(reader).readObject();
 		try {
-			Constructor constructor = cl.getConstructor(JsonObject.class);
-			return (C) constructor.newInstance(jsonObject);
+			Constructor<C> constructor = cl.getConstructor(JsonObject.class);
+			return constructor.newInstance(jsonObject);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
 		}
@@ -152,7 +162,7 @@ public class JsonLDObject {
 
 	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
-		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject.getJsonObjectBuilder(), term, jsonLdObject.getJsonObject());
+		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject.getJsonObjectBuilder(), term, this.getJsonObject());
 	}
 
 	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {
@@ -160,8 +170,8 @@ public class JsonLDObject {
 		JsonObject jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
 		if (jsonObject == null) return null;
 		try {
-			Constructor constructor = cl.getConstructor(JsonObject.class);
-			return (C) constructor.newInstance(jsonObject);
+			Constructor<C> constructor = cl.getConstructor(JsonObject.class);
+			return constructor.newInstance(jsonObject);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
 		}
@@ -197,15 +207,13 @@ public class JsonLDObject {
 	}
 
 	public synchronized JsonObject getJsonObject() {
-		if (this.jsonObject != null) return this.jsonObject;
 		JsonObject jsonObject = this.jsonObjectBuilder.build();
-		this.jsonObjectBuilder = Json.createObjectBuilder();
-		JsonLDUtils.jsonLdAddAll(this.jsonObjectBuilder, jsonObject);
+		this.jsonObjectBuilder = Json.createObjectBuilder(jsonObject);
 		return jsonObject;
 	}
 
-	public List<String> getContexts() {
-		return JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), Keywords.CONTEXT);
+	public List<URI> getContexts() {
+		return JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), Keywords.CONTEXT).stream().map(JsonLDUtils::stringToUri).collect(Collectors.toList());
 	}
 
 	public final List<String> getTypes() {
@@ -220,8 +228,8 @@ public class JsonLDObject {
 		return JsonLDUtils.jsonLdContainsString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_TYPE, type);
 	}
 
-	public final String getId() {
-		return JsonLDUtils.jsonLdGetString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_ID);
+	public final URI getId() {
+		return JsonLDUtils.stringToUri(JsonLDUtils.jsonLdGetString(this.getJsonObject(), JsonLDKeywords.JSONLD_TERM_ID));
 	}
 
 	/*

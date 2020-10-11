@@ -162,7 +162,7 @@ public class JsonLDUtils {
 		if (entry == null) return null;
 
 		if (entry instanceof JsonArray) {
-			return ((JsonArray) entry);
+			return (JsonArray) entry;
 		} else {
 			return Collections.singletonList(entry);
 		}
@@ -174,7 +174,7 @@ public class JsonLDUtils {
 		if (entry == null) return null;
 
 		if (entry instanceof JsonArray) {
-			return ((JsonArray) entry);
+			return (JsonArray) entry;
 		} else {
 			throw new IllegalArgumentException("Cannot get json array '" + term + "' from " + jsonObject);
 		}
@@ -186,7 +186,9 @@ public class JsonLDUtils {
 		if (entry == null) return null;
 
 		if (entry instanceof JsonObject) {
-			return ((JsonObject) entry);
+			return (JsonObject) entry;
+		} else if (entry instanceof JsonArray && ((JsonArray) entry).size() == 1 && ((JsonArray) entry).get(0) instanceof JsonObject) {
+			return (JsonObject) ((JsonArray) entry).get(0);
 		} else {
 			throw new IllegalArgumentException("Cannot get json object '" + term + "' from " + jsonObject);
 		}
@@ -218,7 +220,7 @@ public class JsonLDUtils {
 		if (entry instanceof JsonString) {
 			return Collections.singletonList(((JsonString) entry).getString());
 		} else if (entry instanceof JsonArray) {
-			return ((JsonArray) entry).stream().map(x -> ((JsonString) x).getString()).collect(Collectors.toList());
+			return ((JsonArray) entry).stream().map(x -> x instanceof JsonString ? ((JsonString) x).getString() : null).collect(Collectors.toList());
 		} else {
 			throw new IllegalArgumentException("Cannot get string list '" + term + "' from " + jsonObject);
 		}

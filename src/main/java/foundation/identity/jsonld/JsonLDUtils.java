@@ -53,83 +53,83 @@ public class JsonLDUtils {
 	 * add
 	 */
 
-	public static void jsonLdAddAll(JsonObjectBuilder jsonObjectBuilder, JsonObject jsonObject) {
+	public static void jsonLdAddAll(JsonLDObject jsonLDObject, JsonObject jsonObject) {
 		for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet())
-			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
+			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), entry.getValue());
 	}
 
-	public static void jsonLdAddAllJsonValueMap(JsonObjectBuilder jsonObjectBuilder, Map<String, JsonValue> map) {
+	public static void jsonLdAddAllJsonValueMap(JsonLDObject jsonLDObject, Map<String, JsonValue> map) {
 		for (Map.Entry<String, JsonValue> entry : map.entrySet())
-			jsonObjectBuilder.add(entry.getKey(), entry.getValue());
+			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), entry.getValue());
 	}
 
-	public static void jsonLdAddAllStringMap(JsonObjectBuilder jsonObjectBuilder, Map<String, String> map) {
+	public static void jsonLdAddAllStringMap(JsonLDObject jsonLDObject, Map<String, String> map) {
 		for (Map.Entry<String, String> entry : map.entrySet())
-			jsonObjectBuilder.add(entry.getKey(), Json.createValue(entry.getValue()));
+			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), Json.createValue(entry.getValue()));
 	}
 
-	public static void jsonLdAddJsonValue(JsonObjectBuilder jsonObjectBuilder, String term, JsonValue jsonValue) {
-		jsonLdAddJsonValueList(jsonObjectBuilder, term, Collections.singletonList(jsonValue));
+	public static void jsonLdAddJsonValue(JsonLDObject jsonLDObject, String term, JsonValue jsonValue) {
+		jsonLdAddJsonValueList(jsonLDObject, term, Collections.singletonList(jsonValue));
 	}
 
-	public static void jsonLdAddJsonValueList(JsonObjectBuilder jsonObjectBuilder, String term, List<JsonValue> jsonValues) {
+	public static void jsonLdAddJsonValueList(JsonLDObject jsonLDObject, String term, List<JsonValue> jsonValues) {
 
-		if (jsonObjectBuilder == null || term == null || jsonValues == null) throw new NullPointerException();
+		if (jsonLDObject.getJsonObjectBuilder() == null || term == null || jsonValues == null) throw new NullPointerException();
 		if (jsonValues.size() < 1) return;
 
-		JsonValue jsonValueExisting = null;
+		JsonValue jsonValueExisting = jsonLDObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null) {
 			if (jsonValues.size() == 1) {
-				jsonObjectBuilder.add(term, jsonValues.get(0));
+				jsonLDObject.getJsonObjectBuilder().add(term, jsonValues.get(0));
 			} else {
 				JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 				for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-				jsonObjectBuilder.add(term, jsonArrayBuilder);
+				jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 			}
 		} else if (jsonValueExisting instanceof JsonArray) {
 			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 			for (JsonValue jsonValue : ((JsonArray) jsonValueExisting)) jsonArrayBuilder.add(jsonValue);
 			for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-			jsonObjectBuilder.add(term, jsonArrayBuilder);
+			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 		} else {
 			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 			jsonArrayBuilder.add(jsonValueExisting);
 			for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-			jsonObjectBuilder.add(term, jsonArrayBuilder);
+			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 		}
 	}
 
-	public static void jsonLdAddString(JsonObjectBuilder jsonObjectBuilder, String term, String value) {
+	public static void jsonLdAddString(JsonLDObject jsonLDObject, String term, String value) {
 
-		jsonLdAddStringList(jsonObjectBuilder, term, Collections.singletonList(value));
+		jsonLdAddStringList(jsonLDObject, term, Collections.singletonList(value));
 	}
 
-	public static void jsonLdAddStringList(JsonObjectBuilder jsonObjectBuilder, String term, List<String> values) {
+	public static void jsonLdAddStringList(JsonLDObject jsonLDObject, String term, List<String> values) {
 
-		if (jsonObjectBuilder == null || term == null || values == null) throw new NullPointerException();
+		if (jsonLDObject.getJsonObjectBuilder() == null || term == null || values == null) throw new NullPointerException();
 		if (values.size() < 1) return;
 
-		JsonValue jsonValueExisting = null;
+		JsonValue jsonValueExisting = jsonLDObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null)  {
 			if (values.size() == 1) {
-				jsonObjectBuilder.add(term, Json.createValue(values.get(0)));
+				jsonLDObject.getJsonObjectBuilder().add(term, Json.createValue(values.get(0)));
 			} else {
 				JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 				for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-				jsonObjectBuilder.add(term, jsonArrayBuilder);
+				jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 			}
 		} else if (jsonValueExisting instanceof JsonArray)  {
 			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 			for (JsonValue jsonValue : ((JsonArray) jsonValueExisting)) jsonArrayBuilder.add(jsonValue);
 			for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-			jsonObjectBuilder.add(term, jsonArrayBuilder);
+			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 		} else {
 			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
 			jsonArrayBuilder.add(jsonValueExisting);
 			for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-			jsonObjectBuilder.add(term, jsonArrayBuilder);
+			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
 		}
 	}
 
@@ -137,9 +137,9 @@ public class JsonLDUtils {
 	 * remove
 	 */
 
-	public static void jsonLdRemove(JsonObjectBuilder jsonObjectBuilder, String term) {
+	public static void jsonLdRemove(JsonLDObject jsonLDObject, String term) {
 
-		jsonObjectBuilder.remove(term);
+		jsonLDObject.getJsonObjectBuilder().remove(term);
 	}
 
 	/*

@@ -58,12 +58,14 @@ public class JsonLDObject {
 
 	public static class Builder<T extends Builder<T, J>, J extends JsonLDObject> {
 
+		private JsonLDObject base = null;
 		private boolean defaultContexts = false;
 		private boolean defaultTypes = false;
-		private List<URI> contexts;
-		private List<String> types;
-		private URI id;
+		private List<URI> contexts = null;
+		private List<String> types = null;
+		private URI id = null;
 
+		private boolean isBuilt = false;
 		protected J jsonLDObject;
 
 		protected Builder(J jsonLDObject) {
@@ -72,23 +74,22 @@ public class JsonLDObject {
 
 		public J build() {
 
+			if (this.isBuilt) throw new IllegalStateException("JSON-LD object has already been built.");
+			this.isBuilt = true;
+
 			// add JSON-LD properties
+			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLDObject, this.base.getJsonObject()); }
 			if (this.defaultContexts) { if (this.contexts == null) this.contexts = new ArrayList<>(); this.contexts.addAll(0, JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); }
 			if (this.defaultTypes) { if (this.types == null) this.types = new ArrayList<>(); this.types.addAll(0, JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); }
-			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
-			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
-			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject.getJsonObjectBuilder(), JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
+			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
+			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
 			return this.jsonLDObject;
 		}
 
-		public T template(J template) {
-			JsonLDUtils.jsonLdAddAll(this.jsonLDObject.getJsonObjectBuilder(), template.getJsonObject());
-			return (T) this;
-		}
-
-		public T remove(String term) {
-			JsonLDUtils.jsonLdRemove(this.jsonLDObject.getJsonObjectBuilder(), term);
+		public T base(JsonLDObject base) {
+			this.base = base;
 			return (T) this;
 		}
 
@@ -162,7 +163,7 @@ public class JsonLDObject {
 
 	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
-		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject.getJsonObjectBuilder(), term, this.getJsonObject());
+		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject, term, this.getJsonObject());
 	}
 
 	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {
@@ -183,7 +184,7 @@ public class JsonLDObject {
 
 	public static <C extends JsonLDObject> void removeFromJsonLdObject(Class<C> cl, JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(cl);
-		JsonLDUtils.jsonLdRemove(jsonLdObject.getJsonObjectBuilder(), term);
+		JsonLDUtils.jsonLdRemove(jsonLdObject, term);
 	}
 
 	public static void removeFromJsonLdObject(JsonLDObject jsonLdObject) {
@@ -295,7 +296,7 @@ public class JsonLDObject {
 	 * Helper methods
 	 */
 
-	private static <C extends JsonLDObject> List<URI> getDefaultJsonLDContexts(Class<C> cl) {
+	public static <C extends JsonLDObject> List<URI> getDefaultJsonLDContexts(Class<C> cl) {
 		try {
 			Field field = cl.getField("DEFAULT_JSONLD_CONTEXTS");
 			return Arrays.asList((URI[]) field.get(null));
@@ -304,7 +305,7 @@ public class JsonLDObject {
 		}
 	}
 
-	private static <C extends JsonLDObject> List<String> getDefaultJsonLDTypes(Class<C> cl) {
+	public static <C extends JsonLDObject> List<String> getDefaultJsonLDTypes(Class<C> cl) {
 		try {
 			Field field = cl.getField("DEFAULT_JSONLD_TYPES");
 			return Arrays.asList((String[]) field.get(null));
@@ -313,7 +314,7 @@ public class JsonLDObject {
 		}
 	}
 
-	private static <C extends JsonLDObject> String getDefaultJsonLDPredicate(Class<C> cl) {
+	public static <C extends JsonLDObject> String getDefaultJsonLDPredicate(Class<C> cl) {
 		try {
 			Field field = cl.getField("DEFAULT_JSONLD_PREDICATE");
 			return (String) field.get(null);

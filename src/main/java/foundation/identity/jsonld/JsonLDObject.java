@@ -9,10 +9,15 @@ import com.apicatalog.jsonld.lang.Keywords;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.io.nquad.NQuadsWriter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import foundation.identity.jsonld.normalization.NormalizationAlgorithm;
 
-import javax.json.*;
-import javax.json.stream.JsonGenerator;
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -30,24 +35,28 @@ public class JsonLDObject {
 	public static final String[] DEFAULT_JSONLD_TYPES = new String[] { };
 	public static final String DEFAULT_JSONLD_PREDICATE = null;
 
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static final ObjectWriter objectWriterDefault = objectMapper.writer();
+	private static final ObjectWriter objectWriterPretty = objectMapper.writerWithDefaultPrettyPrinter();
+
 	private DocumentLoader documentLoader;
-	private JsonObjectBuilder jsonObjectBuilder;
+	private Map<String, Object> jsonObject;
 
 	protected JsonLDObject(DocumentLoader documentLoader) {
 		this.documentLoader = documentLoader;
-		this.jsonObjectBuilder = Json.createObjectBuilder();
+		this.jsonObject = new LinkedHashMap<String, Object>();
 	}
 
-	public JsonLDObject(DocumentLoader documentLoader, JsonObject jsonObject) {
+	public JsonLDObject(DocumentLoader documentLoader, Map<String, Object> jsonObject) {
 		this.documentLoader = documentLoader;
-		this.jsonObjectBuilder = Json.createObjectBuilder(jsonObject);
+		this.jsonObject = jsonObject;
 	}
 
 	protected JsonLDObject() {
 		this((DocumentLoader) null);
 	}
 
-	public JsonLDObject(JsonObject jsonObject) {
+	public JsonLDObject(Map<String, Object> jsonObject) {
 		this((DocumentLoader) null, jsonObject);
 	}
 
@@ -80,9 +89,9 @@ public class JsonLDObject {
 			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLDObject, this.base.getJsonObject()); }
 			if (this.defaultContexts) { if (this.contexts == null) this.contexts = new ArrayList<>(); this.contexts.addAll(0, JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); }
 			if (this.defaultTypes) { if (this.types == null) this.types = new ArrayList<>(); this.types.addAll(0, JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); }
-			if (this.contexts != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
-			if (this.types != null) JsonLDUtils.jsonLdAddStringList(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
-			if (this.id != null) JsonLDUtils.jsonLdAddString(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
+			if (this.contexts != null) JsonLDUtils.jsonLdAddList(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
+			if (this.types != null) JsonLDUtils.jsonLdAddList(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
 			return this.jsonLDObject;
 		}
@@ -135,12 +144,14 @@ public class JsonLDObject {
 	 */
 
 	public static <C extends JsonLDObject> C fromJson(Class<C> cl, Reader reader) {
-		JsonObject jsonObject = Json.createReader(reader).readObject();
 		try {
-			Constructor<C> constructor = cl.getConstructor(JsonObject.class);
+			Map<String, Object> jsonObject = objectMapper.readValue(reader, Map.class);
+			Constructor<C> constructor = cl.getConstructor(Map.class);
 			return constructor.newInstance(jsonObject);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
+		} catch (IOException ex) {
+			throw new RuntimeException("Cannot read JSON: " + ex.getMessage(), ex);
 		}
 	}
 
@@ -162,15 +173,15 @@ public class JsonLDObject {
 
 	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
-		JsonLDUtils.jsonLdAddJsonValue(jsonLdObject, term, this.getJsonObject());
+		JsonLDUtils.jsonLdAdd(jsonLdObject, term, this.getJsonObject());
 	}
 
 	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(cl);
-		JsonObject jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
+		Map<String, Object> jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
 		if (jsonObject == null) return null;
 		try {
-			Constructor<C> constructor = cl.getConstructor(JsonObject.class);
+			Constructor<C> constructor = cl.getConstructor(Map.class);
 			return constructor.newInstance(jsonObject);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
@@ -202,14 +213,15 @@ public class JsonLDObject {
 		this.documentLoader = documentLoader;
 	}
 
-	public JsonObjectBuilder getJsonObjectBuilder() {
-		return this.jsonObjectBuilder;
+	@JsonValue
+	public Map<String, Object> getJsonObject() {
+		return this.jsonObject;
 	}
 
-	public synchronized JsonObject getJsonObject() {
-		JsonObject jsonObject = this.jsonObjectBuilder.build();
-		this.jsonObjectBuilder = Json.createObjectBuilder(jsonObject);
-		return jsonObject;
+	@JsonAnySetter
+	public void setJsonObjectKeyValue(String key, Object value) {
+
+		this.getJsonObject().put(key, value);
 	}
 
 	public List<URI> getContexts() {
@@ -236,21 +248,13 @@ public class JsonLDObject {
 	 * Serialization
 	 */
 
-	private static final JsonWriterFactory jsonWriterFactory;
-	private static final JsonWriterFactory jsonWriterFactoryPretty;
-
-	static {
-
-		Map<String, Object> properties = new HashMap<>(1);
-		Map<String, Object> propertiesPretty = new HashMap<>(1);
-		propertiesPretty.put(JsonGenerator.PRETTY_PRINTING, true);
-		jsonWriterFactory = Json.createWriterFactory(properties);
-		jsonWriterFactoryPretty = Json.createWriterFactory(propertiesPretty);
+	public synchronized JsonObject toJsonObject() {
+		return Json.createObjectBuilder(this.getJsonObject()).build();
 	}
 
 	public RdfDataset toDataset() throws JsonLDException {
 
-		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.getJsonObject());
+		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.toJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
 		if (this.getDocumentLoader() != null) toRdfApi.loader(this.getDocumentLoader());
 		toRdfApi.ordered(true);
@@ -278,12 +282,12 @@ public class JsonLDObject {
 
 	public String toJson(boolean pretty) {
 
-		JsonWriterFactory jsonWriterFactory = pretty ? JsonLDObject.jsonWriterFactoryPretty : JsonLDObject.jsonWriterFactory;
-		StringWriter stringWriter = new StringWriter();
-		JsonWriter jsonWriter = jsonWriterFactory.createWriter(stringWriter);
-		jsonWriter.writeObject(this.getJsonObject());
-		jsonWriter.close();
-		return stringWriter.toString();
+		ObjectWriter objectWriter = pretty ? objectWriterPretty : objectWriterDefault;
+		try {
+			return objectWriter.writeValueAsString(this.getJsonObject());
+		} catch (JsonProcessingException ex) {
+			throw new RuntimeException("Cannot write JSON: " + ex.getMessage(), ex);
+		}
 	}
 
 	public String toJson() {

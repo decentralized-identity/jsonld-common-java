@@ -1,6 +1,5 @@
 package foundation.identity.jsonld;
 
-import javax.json.*;
 import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -53,83 +52,38 @@ public class JsonLDUtils {
 	 * add
 	 */
 
-	public static void jsonLdAddAll(JsonLDObject jsonLDObject, JsonObject jsonObject) {
-		for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet())
-			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), entry.getValue());
+	public static void jsonLdAddAll(JsonLDObject jsonLDObject, Map<String, Object> jsonObject) {
+		jsonLDObject.getJsonObject().putAll(jsonObject);
 	}
 
-	public static void jsonLdAddAllJsonValueMap(JsonLDObject jsonLDObject, Map<String, JsonValue> map) {
-		for (Map.Entry<String, JsonValue> entry : map.entrySet())
-			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), entry.getValue());
+	public static void jsonLdAdd(JsonLDObject jsonLDObject, String term, Object value) {
+
+		jsonLdAddList(jsonLDObject, term, Collections.singletonList(value));
 	}
 
-	public static void jsonLdAddAllStringMap(JsonLDObject jsonLDObject, Map<String, String> map) {
-		for (Map.Entry<String, String> entry : map.entrySet())
-			jsonLDObject.getJsonObjectBuilder().add(entry.getKey(), Json.createValue(entry.getValue()));
-	}
+	public static void jsonLdAddList(JsonLDObject jsonLDObject, String term, List<? extends Object> values) {
 
-	public static void jsonLdAddJsonValue(JsonLDObject jsonLDObject, String term, JsonValue jsonValue) {
-		jsonLdAddJsonValueList(jsonLDObject, term, Collections.singletonList(jsonValue));
-	}
-
-	public static void jsonLdAddJsonValueList(JsonLDObject jsonLDObject, String term, List<JsonValue> jsonValues) {
-
-		if (jsonLDObject.getJsonObjectBuilder() == null || term == null || jsonValues == null) throw new NullPointerException();
-		if (jsonValues.size() < 1) return;
-
-		JsonValue jsonValueExisting = jsonLDObject.getJsonObject().get(term);
-
-		if (jsonValueExisting == null) {
-			if (jsonValues.size() == 1) {
-				jsonLDObject.getJsonObjectBuilder().add(term, jsonValues.get(0));
-			} else {
-				JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-				for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-				jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
-			}
-		} else if (jsonValueExisting instanceof JsonArray) {
-			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-			for (JsonValue jsonValue : ((JsonArray) jsonValueExisting)) jsonArrayBuilder.add(jsonValue);
-			for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
-		} else {
-			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-			jsonArrayBuilder.add(jsonValueExisting);
-			for (JsonValue jsonValue : jsonValues) jsonArrayBuilder.add(jsonValue);
-			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
-		}
-	}
-
-	public static void jsonLdAddString(JsonLDObject jsonLDObject, String term, String value) {
-
-		jsonLdAddStringList(jsonLDObject, term, Collections.singletonList(value));
-	}
-
-	public static void jsonLdAddStringList(JsonLDObject jsonLDObject, String term, List<String> values) {
-
-		if (jsonLDObject.getJsonObjectBuilder() == null || term == null || values == null) throw new NullPointerException();
+		if (jsonLDObject.getJsonObject() == null || term == null || values == null) throw new NullPointerException();
 		if (values.size() < 1) return;
 
-		JsonValue jsonValueExisting = jsonLDObject.getJsonObject().get(term);
+		Object jsonValueExisting = jsonLDObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null)  {
 			if (values.size() == 1) {
-				jsonLDObject.getJsonObjectBuilder().add(term, Json.createValue(values.get(0)));
+				jsonLDObject.getJsonObject().put(term, values.get(0));
 			} else {
-				JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-				for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-				jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
+				List<Object> jsonArray = new ArrayList<>(values);
+				jsonLDObject.getJsonObject().put(term, jsonArray);
 			}
-		} else if (jsonValueExisting instanceof JsonArray)  {
-			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-			for (JsonValue jsonValue : ((JsonArray) jsonValueExisting)) jsonArrayBuilder.add(jsonValue);
-			for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
+		} else if (jsonValueExisting instanceof List<?>)  {
+			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
+			jsonArray.addAll(values);
+			jsonLDObject.getJsonObject().put(term, jsonArray);
 		} else {
-			JsonArrayBuilder jsonArrayBuilder = Json.createArrayBuilder();
-			jsonArrayBuilder.add(jsonValueExisting);
-			for (String value : values) jsonArrayBuilder.add(Json.createValue(value));
-			jsonLDObject.getJsonObjectBuilder().add(term, jsonArrayBuilder);
+			List<Object> jsonArray = new ArrayList<>();
+			jsonArray.add(jsonValueExisting);
+			jsonArray.addAll(values);
+			jsonLDObject.getJsonObject().put(term, jsonArray);
 		}
 	}
 
@@ -139,88 +93,71 @@ public class JsonLDUtils {
 
 	public static void jsonLdRemove(JsonLDObject jsonLDObject, String term) {
 
-		jsonLDObject.getJsonObjectBuilder().remove(term);
+		jsonLDObject.getJsonObject().remove(term);
 	}
 
 	/*
 	 * get
 	 */
 
-	public static Map<String, JsonValue> jsonLdGetAsJsonValueMap(JsonObject jsonObject) {
-
-		return jsonObject;
-	}
-
-	public static JsonValue jsonLdGetJsonValue(JsonObject jsonObject, String term) {
+	public static Object jsonLdGetJsonValue(Map<String, Object> jsonObject, String term) {
 
 		return jsonObject.get(term);
 	}
 
-	public static List<JsonValue> jsonLdGetJsonValueList(JsonObject jsonObject, String term) {
+	public static List<Object> jsonLdGetJsonArray(Map<String, Object> jsonObject, String term) {
 
-		JsonValue entry = jsonObject.get(term);
+		Object entry = jsonObject.get(term);
 		if (entry == null) return null;
 
-		if (entry instanceof JsonArray) {
-			return (JsonArray) entry;
-		} else {
-			return Collections.singletonList(entry);
-		}
-	}
-
-	public static JsonArray jsonLdGetJsonArray(JsonObject jsonObject, String term) {
-
-		JsonValue entry = jsonObject.get(term);
-		if (entry == null) return null;
-
-		if (entry instanceof JsonArray) {
-			return (JsonArray) entry;
+		if (entry instanceof List<?>) {
+			return (List<Object>) entry;
 		} else {
 			throw new IllegalArgumentException("Cannot get json array '" + term + "' from " + jsonObject);
 		}
 	}
 
-	public static JsonObject jsonLdGetJsonObject(JsonObject jsonObject, String term) {
+	public static Map<String, Object> jsonLdGetJsonObject(Map<String, Object> jsonObject, String term) {
 
-		JsonValue entry = jsonObject.get(term);
+		Object entry = jsonObject.get(term);
 		if (entry == null) return null;
 
-		if (entry instanceof JsonObject) {
-			return (JsonObject) entry;
-		} else if (entry instanceof JsonArray && ((JsonArray) entry).size() == 1 && ((JsonArray) entry).get(0) instanceof JsonObject) {
-			return (JsonObject) ((JsonArray) entry).get(0);
+		if (entry instanceof Map<?, ?>) {
+			return (Map<String, Object>) entry;
+		} else if (entry instanceof List<?> && ((List<Object>) entry).size() == 1 && ((List<Object>) entry).get(0) instanceof Map<?, ?>) {
+			return (Map<String, Object>) ((List<Object>) entry).get(0);
 		} else {
 			throw new IllegalArgumentException("Cannot get json object '" + term + "' from " + jsonObject);
 		}
 	}
 
-	public static String jsonLdGetString(JsonObject jsonObject, String term) {
+	public static String jsonLdGetString(Map<String, Object> jsonObject, String term) {
 
-		JsonValue entry = jsonObject.get(term);
+		Object entry = jsonObject.get(term);
 		if (entry == null) return null;
 
-		if (entry instanceof JsonString) {
-			return ((JsonString) entry).getString();
-		} else if (entry instanceof JsonArray) {
-			if (((JsonArray) entry).size() == 1 && ((JsonArray) entry).get(0) instanceof JsonString) {
-				return ((JsonArray) entry).getString(0);
+		if (entry instanceof String) {
+			return (String) entry;
+		} else if (entry instanceof List<?>) {
+			if (((List<Object>) entry).size() == 1 && ((List<Object>) entry).get(0) instanceof String) {
+				return (String) ((List<Object>) entry).get(0);
 			} else {
-				throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject + " (array)");
+				throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject + " (list)");
 			}
 		} else {
 			throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject);
 		}
 	}
 
-	public static List<String> jsonLdGetStringList(JsonObject jsonObject, String term) {
+	public static List<String> jsonLdGetStringList(Map<String, Object> jsonObject, String term) {
 
-		JsonValue entry = jsonObject.get(term);
+		Object entry = jsonObject.get(term);
 		if (entry == null) return null;
 
-		if (entry instanceof JsonString) {
-			return Collections.singletonList(((JsonString) entry).getString());
-		} else if (entry instanceof JsonArray) {
-			return ((JsonArray) entry).stream().map(x -> x instanceof JsonString ? ((JsonString) x).getString() : null).collect(Collectors.toList());
+		if (entry instanceof String) {
+			return Collections.singletonList((String) entry);
+		} else if (entry instanceof List<?>) {
+			return ((List<Object>) entry).stream().map(x -> x instanceof String ? (String) x : null).collect(Collectors.toList());
 		} else {
 			throw new IllegalArgumentException("Cannot get string list '" + term + "' from " + jsonObject);
 		}
@@ -230,15 +167,15 @@ public class JsonLDUtils {
 	 * contains
 	 */
 
-	public static boolean jsonLdContainsString(JsonObject jsonObject, String term, String value) {
+	public static boolean jsonLdContainsString(Map<String, Object> jsonObject, String term, String value) {
 
-		JsonValue entry = jsonObject.get(term);
+		Object entry = jsonObject.get(term);
 		if (entry == null) return false;
 
-		if (entry instanceof JsonString)
-			return ((JsonString) entry).getString().equals(value);
-		else if (entry instanceof JsonArray)
-			return ((JsonArray) entry).contains(value);
+		if (entry instanceof String)
+			return ((String) entry).equals(value);
+		else if (entry instanceof List<?>)
+			return ((List<Object>) entry).contains(value);
 		else
 			return false;
 	}

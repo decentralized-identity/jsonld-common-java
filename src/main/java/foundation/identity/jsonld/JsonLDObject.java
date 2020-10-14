@@ -10,6 +10,7 @@ import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
 import com.apicatalog.rdf.io.nquad.NQuadsWriter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,9 +23,9 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,37 +35,30 @@ public class JsonLDObject {
 	public static final URI[] DEFAULT_JSONLD_CONTEXTS = new URI[] { };
 	public static final String[] DEFAULT_JSONLD_TYPES = new String[] { };
 	public static final String DEFAULT_JSONLD_PREDICATE = null;
+	public static final DocumentLoader DEFAULT_DOCUMENT_LOADER = null;
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	private static final ObjectWriter objectWriterDefault = objectMapper.writer();
 	private static final ObjectWriter objectWriterPretty = objectMapper.writerWithDefaultPrettyPrinter();
 
-	private DocumentLoader documentLoader;
 	private Map<String, Object> jsonObject;
+	private DocumentLoader documentLoader;
 
-	protected JsonLDObject(DocumentLoader documentLoader) {
-		this.documentLoader = documentLoader;
-		this.jsonObject = new LinkedHashMap<String, Object>();
+	@JsonCreator
+	public JsonLDObject() {
+		this(new LinkedHashMap<String, Object>());
 	}
 
-	public JsonLDObject(DocumentLoader documentLoader, Map<String, Object> jsonObject) {
-		this.documentLoader = documentLoader;
+	protected JsonLDObject(Map<String, Object> jsonObject) {
 		this.jsonObject = jsonObject;
-	}
-
-	protected JsonLDObject() {
-		this((DocumentLoader) null);
-	}
-
-	public JsonLDObject(Map<String, Object> jsonObject) {
-		this((DocumentLoader) null, jsonObject);
+		this.documentLoader = getDefaultDocumentLoader(this.getClass());
 	}
 
 	/*
 	 * Factory methods
 	 */
 
-	public static class Builder<T extends Builder<T, J>, J extends JsonLDObject> {
+	public static class Builder<B extends Builder<B>> {
 
 		private JsonLDObject base = null;
 		private boolean defaultContexts = false;
@@ -74,13 +68,13 @@ public class JsonLDObject {
 		private URI id = null;
 
 		private boolean isBuilt = false;
-		protected J jsonLDObject;
+		protected JsonLDObject jsonLDObject;
 
-		protected Builder(J jsonLDObject) {
+		protected Builder(JsonLDObject jsonLDObject) {
 			this.jsonLDObject = jsonLDObject;
 		}
 
-		public J build() {
+		public JsonLDObject build() {
 
 			if (this.isBuilt) throw new IllegalStateException("JSON-LD object has already been built.");
 			this.isBuilt = true;
@@ -96,75 +90,59 @@ public class JsonLDObject {
 			return this.jsonLDObject;
 		}
 
-		public T base(JsonLDObject base) {
+		public B base(JsonLDObject base) {
 			this.base = base;
-			return (T) this;
+			return (B) this;
 		}
 
-		public T defaultContexts(boolean defaultContexts) {
+		public B defaultContexts(boolean defaultContexts) {
 			this.defaultContexts = defaultContexts;
-			return (T) this;
+			return (B) this;
 		}
 
-		public T contexts(List<URI> contexts) {
+		public B contexts(List<URI> contexts) {
 			this.contexts = new ArrayList<URI> (contexts);
-			return (T) this;
+			return (B) this;
 		}
 
-		public T context(URI context) {
+		public B context(URI context) {
 			return this.contexts(Collections.singletonList(context));
 		}
 
-		public T defaultTypes(boolean defaultTypes) {
+		public B defaultTypes(boolean defaultTypes) {
 			this.defaultTypes = defaultTypes;
-			return (T) this;
+			return (B) this;
 		}
 
-		public T types(List<String> types) {
+		public B types(List<String> types) {
 			this.types = new ArrayList<String> (types);
-			return (T) this;
+			return (B) this;
 		}
 
-		public T type(String type) {
+		public B type(String type) {
 			return this.types(Collections.singletonList(type));
 		}
 
-		public T id(URI id) {
+		public B id(URI id) {
 			this.id = id;
-			return (T) this;
+			return (B) this;
 		}
 	}
 
-	public static Builder builder() {
+	public static Builder<? extends Builder<?>> builder() {
 		return new Builder(new JsonLDObject());
 	}
 
-	/*
-	 * Reading the JSON-LD object
-	 */
-
-	public static <C extends JsonLDObject> C fromJson(Class<C> cl, Reader reader) {
-		try {
-			Map<String, Object> jsonObject = objectMapper.readValue(reader, Map.class);
-			Constructor<C> constructor = cl.getConstructor(Map.class);
-			return constructor.newInstance(jsonObject);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
-			throw new Error(ex);
-		} catch (IOException ex) {
-			throw new RuntimeException("Cannot read JSON: " + ex.getMessage(), ex);
-		}
+	public static JsonLDObject fromJsonObject(Map<String, Object> jsonObject) {
+		return new JsonLDObject(jsonObject);
 	}
 
 	public static JsonLDObject fromJson(Reader reader) {
-		return fromJson(JsonLDObject.class, reader);
-	}
-
-	public static <C extends JsonLDObject> C fromJson(Class<C> cl, String json) {
-		return fromJson(cl, new StringReader(json));
+		return new JsonLDObject(readJson(reader));
 	}
 
 	public static JsonLDObject fromJson(String json) {
-		return fromJson(JsonLDObject.class, json);
+		return new JsonLDObject(readJson(json));
 	}
 
 	/*
@@ -181,9 +159,9 @@ public class JsonLDObject {
 		Map<String, Object> jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
 		if (jsonObject == null) return null;
 		try {
-			Constructor<C> constructor = cl.getConstructor(Map.class);
-			return constructor.newInstance(jsonObject);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+			Method method = cl.getMethod("fromJsonObject", Map.class);
+			return (C) method.invoke(null, jsonObject);
+		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
 		}
 	}
@@ -245,12 +223,24 @@ public class JsonLDObject {
 	}
 
 	/*
-	 * Serialization
+	 * Reading the JSON-LD object
 	 */
 
-	public synchronized JsonObject toJsonObject() {
-		return Json.createObjectBuilder(this.getJsonObject()).build();
+	protected static Map<String, Object> readJson(Reader reader) {
+		try {
+			return objectMapper.readValue(reader, Map.class);
+		} catch (IOException ex) {
+			throw new RuntimeException("Cannot read JSON: " + ex.getMessage(), ex);
+		}
 	}
+
+	protected static Map<String, Object> readJson(String json) {
+		return readJson(new StringReader(json));
+	}
+
+	/*
+	 * Writing the JSON-LD object
+	 */
 
 	public RdfDataset toDataset() throws JsonLDException {
 
@@ -274,12 +264,6 @@ public class JsonLDObject {
 		return stringWriter.toString();
 	}
 
-	public String normalize(NormalizationAlgorithm.Version version) throws JsonLDException {
-
-		RdfDataset rdfDataset = this.toDataset();
-		return new NormalizationAlgorithm(version).main(rdfDataset);
-	}
-
 	public String toJson(boolean pretty) {
 
 		ObjectWriter objectWriter = pretty ? objectWriterPretty : objectWriterDefault;
@@ -295,9 +279,28 @@ public class JsonLDObject {
 		return this.toJson(false);
 	}
 
+	public String normalize(NormalizationAlgorithm.Version version) throws JsonLDException {
+
+		RdfDataset rdfDataset = this.toDataset();
+		return new NormalizationAlgorithm(version).main(rdfDataset);
+	}
+
+	public synchronized JsonObject toJsonObject() {
+		return Json.createObjectBuilder(this.getJsonObject()).build();
+	}
+
 	/*
 	 * Helper methods
 	 */
+
+	public static <C extends JsonLDObject> DocumentLoader getDefaultDocumentLoader(Class<C> cl) {
+		try {
+			Field field = cl.getField("DEFAULT_DOCUMENT_LOADER");
+			return (DocumentLoader) field.get(null);
+		} catch (IllegalAccessException | NoSuchFieldException ex) {
+			throw new Error(ex);
+		}
+	}
 
 	public static <C extends JsonLDObject> List<URI> getDefaultJsonLDContexts(Class<C> cl) {
 		try {

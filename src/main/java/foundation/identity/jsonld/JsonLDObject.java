@@ -41,7 +41,7 @@ public class JsonLDObject {
 	private static final ObjectWriter objectWriterDefault = objectMapper.writer();
 	private static final ObjectWriter objectWriterPretty = objectMapper.writerWithDefaultPrettyPrinter();
 
-	private Map<String, Object> jsonObject;
+	private final Map<String, Object> jsonObject;
 	private DocumentLoader documentLoader;
 
 	@JsonCreator

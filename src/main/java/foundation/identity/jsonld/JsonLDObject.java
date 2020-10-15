@@ -100,27 +100,27 @@ public class JsonLDObject {
 			return (B) this;
 		}
 
-		public B contexts(List<URI> contexts) {
-			this.contexts = new ArrayList<URI> (contexts);
-			return (B) this;
-		}
-
-		public B context(URI context) {
-			return this.contexts(Collections.singletonList(context));
-		}
-
 		public B defaultTypes(boolean defaultTypes) {
 			this.defaultTypes = defaultTypes;
 			return (B) this;
 		}
 
+		public B contexts(List<URI> contexts) {
+			this.contexts = contexts;
+			return (B) this;
+		}
+
+		public B context(URI context) {
+			return this.contexts(context == null ? null : Collections.singletonList(context));
+		}
+
 		public B types(List<String> types) {
-			this.types = new ArrayList<String> (types);
+			this.types = types;
 			return (B) this;
 		}
 
 		public B type(String type) {
-			return this.types(Collections.singletonList(type));
+			return this.types(type == null ? null : Collections.singletonList(type));
 		}
 
 		public B id(URI id) {

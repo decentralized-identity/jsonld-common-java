@@ -6,7 +6,7 @@
 	<groupId>decentralized-identity</groupId>
 	<artifactId>jsonld-common-java</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>jsonld-common-java</name>
 
 	<scm>

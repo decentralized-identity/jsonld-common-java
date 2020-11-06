@@ -31,12 +31,16 @@ public class NormalizationAlgorithmTest {
 			JsonDocument jsonDocument2 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("security-v2.jsonld"));
 			jsonDocument2.setDocumentUrl(URI.create("https://w3id.org/security/v2"));
 
-			JsonDocument jsonDocument3 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v1.jsonld"));
-			jsonDocument3.setDocumentUrl(URI.create("https://www.w3.org/2018/credentials/v1"));
+			JsonDocument jsonDocument3 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("security-v3-unstable.jsonld"));
+			jsonDocument3.setDocumentUrl(URI.create("https://w3id.org/security/v3"));
+
+			JsonDocument jsonDocument4 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v1.jsonld"));
+			jsonDocument4.setDocumentUrl(URI.create("https://www.w3.org/2018/credentials/v1"));
 
 			localCache.put(jsonDocument1.getDocumentUrl(), jsonDocument1);
 			localCache.put(jsonDocument2.getDocumentUrl(), jsonDocument2);
 			localCache.put(jsonDocument3.getDocumentUrl(), jsonDocument3);
+			localCache.put(jsonDocument4.getDocumentUrl(), jsonDocument4);
 		} catch (JsonLdError ex) {
 
 			throw new ExceptionInInitializerError(ex);

@@ -6,7 +6,6 @@
     {
       "id": "@id",
       "type": "@type",
-      "@protected": true,
       "JsonWebKey2020": {
         "@id": "https://w3id.org/security#JsonWebKey2020"
       },

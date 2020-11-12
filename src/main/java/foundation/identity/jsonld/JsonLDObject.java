@@ -290,11 +290,6 @@ public class JsonLDObject {
 		return stringWriter.getBuffer().toString();
 	}
 
-	public String normalize() throws JsonLDException, NoSuchAlgorithmException, IOException {
-
-		return this.normalize("urdna2015");
-	}
-
 	public synchronized JsonObject toJsonObject() {
 		return Json.createObjectBuilder(this.getJsonObject()).build();
 	}

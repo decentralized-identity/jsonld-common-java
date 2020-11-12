@@ -56,7 +56,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize());
+		assertEquals(normalizedDocument, jsonLdObject.normalize("urdna2015"));
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize());
+		assertEquals(normalizedDocument, jsonLdObject.normalize("urdna2015"));
 	}
 
 	@Test
@@ -78,7 +78,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize());
+		assertEquals(normalizedDocument, jsonLdObject.normalize("urdna2015"));
 	}
 
 	@Test
@@ -89,6 +89,6 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize());
+		assertEquals(normalizedDocument, jsonLdObject.normalize("urdna2015"));
 	}
 }

@@ -4,7 +4,6 @@ import com.apicatalog.jsonld.api.JsonLdError;
 import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.loader.DocumentLoader;
-import foundation.identity.jsonld.normalization.NormalizationAlgorithm;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStreamReader;
@@ -57,7 +56,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
+		assertEquals(normalizedDocument, jsonLdObject.normalize());
 	}
 
 	@Test
@@ -68,7 +67,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
+		assertEquals(normalizedDocument, jsonLdObject.normalize());
 	}
 
 	@Test
@@ -79,7 +78,7 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
+		assertEquals(normalizedDocument, jsonLdObject.normalize());
 	}
 
 	@Test
@@ -90,6 +89,6 @@ public class NormalizationAlgorithmTest {
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.normalized"));
 
-		assertEquals(normalizedDocument, jsonLdObject.normalize(NormalizationAlgorithm.Version.URDNA2015));
+		assertEquals(normalizedDocument, jsonLdObject.normalize());
 	}
 }

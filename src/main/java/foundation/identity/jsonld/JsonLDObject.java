@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import foundation.identity.jsonld.normalization.NormalizationAlgorithm;
+import io.setl.rdf.normalization.RdfNormalize;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -27,6 +27,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -279,10 +280,19 @@ public class JsonLDObject {
 		return this.toJson(false);
 	}
 
-	public String normalize(NormalizationAlgorithm.Version version) throws JsonLDException {
+	public String normalize(String algorithm) throws JsonLDException, NoSuchAlgorithmException, IOException {
 
 		RdfDataset rdfDataset = this.toDataset();
-		return new NormalizationAlgorithm(version).main(rdfDataset);
+		rdfDataset = RdfNormalize.normalize(rdfDataset, algorithm);
+		StringWriter stringWriter = new StringWriter();
+		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
+		nQuadsWriter.write(rdfDataset);
+		return stringWriter.getBuffer().toString();
+	}
+
+	public String normalize() throws JsonLDException, NoSuchAlgorithmException, IOException {
+
+		return this.normalize("urdna2015");
 	}
 
 	public synchronized JsonObject toJsonObject() {

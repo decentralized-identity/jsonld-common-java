@@ -43,7 +43,7 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     @Override
     public Document loadDocument(URI url, DocumentLoaderOptions options) throws JsonLdError {
 
-        if (this.enableLocalCache) {
+        if (this.enableLocalCache && this.localCache.containsKey(url)) {
             return this.localCache.get(url);
         }
         if (enableHttp && "http".equals(url.getScheme().toLowerCase())) {

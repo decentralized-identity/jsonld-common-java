@@ -84,8 +84,8 @@ public class JsonLDObject {
 			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLDObject, this.base.getJsonObject()); }
 			if (this.defaultContexts) { List<URI> contexts = new ArrayList<>(JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); if (this.contexts != null) contexts.addAll(this.contexts); this.contexts = contexts; }
 			if (this.defaultTypes) { List<String> types = new ArrayList<>(JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); if (this.types != null) types.addAll(this.types); this.types = types; }
-			if (this.contexts != null) JsonLDUtils.jsonLdAddList(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
-			if (this.types != null) JsonLDUtils.jsonLdAddList(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.contexts != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
+			if (this.types != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
 			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
 			return this.jsonLDObject;
@@ -153,6 +153,11 @@ public class JsonLDObject {
 	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
 		JsonLDUtils.jsonLdAdd(jsonLdObject, term, this.getJsonObject());
+	}
+
+	public void addToJsonLDObjectAsJsonArray(JsonLDObject jsonLdObject) {
+		String term = getDefaultJsonLDPredicate(this.getClass());
+		JsonLDUtils.jsonLdAddAsJsonArray(jsonLdObject, term, Collections.singletonList(this.getJsonObject()));
 	}
 
 	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {

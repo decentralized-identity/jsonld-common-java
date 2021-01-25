@@ -58,10 +58,25 @@ public class JsonLDUtils {
 
 	public static void jsonLdAdd(JsonLDObject jsonLDObject, String term, Object value) {
 
-		jsonLdAddList(jsonLDObject, term, Collections.singletonList(value));
+		if (jsonLDObject.getJsonObject() == null || term == null || value == null) throw new NullPointerException();
+
+		Object jsonValueExisting = jsonLDObject.getJsonObject().get(term);
+
+		if (jsonValueExisting == null)  {
+			jsonLDObject.getJsonObject().put(term, value);
+		} else if (jsonValueExisting instanceof List<?>)  {
+			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
+			jsonArray.add(value);
+			jsonLDObject.getJsonObject().put(term, jsonArray);
+		} else {
+			List<Object> jsonArray = new ArrayList<>();
+			jsonArray.add(jsonValueExisting);
+			jsonArray.add(value);
+			jsonLDObject.getJsonObject().put(term, jsonArray);
+		}
 	}
 
-	public static void jsonLdAddList(JsonLDObject jsonLDObject, String term, List<? extends Object> values) {
+	public static void jsonLdAddAsJsonArray(JsonLDObject jsonLDObject, String term, List<? extends Object> values) {
 
 		if (jsonLDObject.getJsonObject() == null || term == null || values == null) throw new NullPointerException();
 		if (values.size() < 1) return;
@@ -69,12 +84,8 @@ public class JsonLDUtils {
 		Object jsonValueExisting = jsonLDObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null)  {
-			if (values.size() == 1) {
-				jsonLDObject.getJsonObject().put(term, values.get(0));
-			} else {
-				List<Object> jsonArray = new ArrayList<>(values);
-				jsonLDObject.getJsonObject().put(term, jsonArray);
-			}
+			List<Object> jsonArray = new ArrayList<>(values);
+			jsonLDObject.getJsonObject().put(term, jsonArray);
 		} else if (jsonValueExisting instanceof List<?>)  {
 			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
 			jsonArray.addAll(values);

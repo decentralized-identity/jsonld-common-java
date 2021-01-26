@@ -1,19 +1,27 @@
 package foundation.identity.jsonld;
 
+import com.apicatalog.jsonld.uri.UriResolver;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class JsonLDDereferencer {
 
     public static class Function implements java.util.function.Function<Object, JsonLDObject> {
 
         private JsonLDObject jsonLdDocument;
+        private URI baseUri;
+
+        public Function(JsonLDObject jsonLdDocument, URI baseUri) {
+            this.jsonLdDocument = jsonLdDocument;
+            this.baseUri = baseUri;
+        }
 
         public Function(JsonLDObject jsonLdDocument) {
             this.jsonLdDocument = jsonLdDocument;
+            this.baseUri = null;
         }
 
         @Override
@@ -24,6 +32,8 @@ public class JsonLDDereferencer {
             else if (o instanceof String) {
                 try {
                     URI uri = new URI((String) o);
+                    if (! uri.isAbsolute() && this.baseUri != null) uri = URI.create(UriResolver.resolve(this.baseUri, (String) o));
+                    if (! uri.isAbsolute()) throw new IllegalArgumentException("No base URI for relative uri " + uri);
                     return findByIdInJsonLdObject(this.jsonLdDocument, uri);
                 } catch (URISyntaxException ex) {
                     throw new IllegalArgumentException("Cannot dereference non-URI string: " + o);

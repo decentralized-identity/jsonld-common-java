@@ -60,8 +60,6 @@ public class JsonLDDereferencer {
             if (! idUri.isAbsolute() && baseUri == null) throw new IllegalArgumentException("No base URI for relative 'id' uri " + uri);
             idUri = URI.create(UriResolver.resolve(baseUri, idUri.toString()));
 
-            System.out.println(findId + " <<-> " + idUri);
-
             if (findId.equals(idUri)) return jsonLDObject;
         }
 

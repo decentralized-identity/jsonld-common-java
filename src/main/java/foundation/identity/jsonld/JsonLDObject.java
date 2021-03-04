@@ -62,6 +62,8 @@ public class JsonLDObject {
 	public static class Builder<B extends Builder<B>> {
 
 		private JsonLDObject base = null;
+		private boolean forceContextsArray = false;
+		private boolean forceTypesArray = false;
 		private boolean defaultContexts = false;
 		private boolean defaultTypes = false;
 		private List<URI> contexts = null;
@@ -84,8 +86,8 @@ public class JsonLDObject {
 			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLDObject, this.base.getJsonObject()); }
 			if (this.defaultContexts) { List<URI> contexts = new ArrayList<>(JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); if (this.contexts != null) contexts.addAll(this.contexts); if (! contexts.isEmpty()) this.contexts = contexts; }
 			if (this.defaultTypes) { List<String> types = new ArrayList<>(JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); if (this.types != null) types.addAll(this.types); if (! types.isEmpty()) this.types = types; }
-			if (this.contexts != null) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
-			if (this.types != null) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.contexts != null) if (this.forceContextsArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList())); else JsonLDUtils.jsonLdAdd(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
+			if (this.types != null) if (this.forceTypesArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types); else JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
 			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
 			return this.jsonLDObject;
@@ -93,6 +95,16 @@ public class JsonLDObject {
 
 		public B base(JsonLDObject base) {
 			this.base = base;
+			return (B) this;
+		}
+
+		public B forceContextsArray(boolean forceContextsArray) {
+			this.forceContextsArray = forceContextsArray;
+			return (B) this;
+		}
+
+		public B forceTypesArray(boolean forceTypesArray) {
+			this.forceTypesArray = forceTypesArray;
 			return (B) this;
 		}
 

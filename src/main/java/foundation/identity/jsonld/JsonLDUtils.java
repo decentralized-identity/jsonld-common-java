@@ -63,7 +63,14 @@ public class JsonLDUtils {
 		Object jsonValueExisting = jsonLDObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null)  {
-			jsonLDObject.getJsonObject().put(term, value);
+			if (value instanceof List<?> && ((List<?>) value).size() == 0)
+				;
+			else if (value instanceof List<?> && ((List<?>) value).size() == 1)
+				jsonLDObject.getJsonObject().put(term, ((List<?>) value).get(0));
+			else if (value instanceof List<?>)
+				jsonLDObject.getJsonObject().put(term, value);
+			else
+				jsonLDObject.getJsonObject().put(term, value);
 		} else if (jsonValueExisting instanceof List<?>)  {
 			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
 			jsonArray.add(value);

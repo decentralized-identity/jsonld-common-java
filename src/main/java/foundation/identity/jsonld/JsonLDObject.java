@@ -2,6 +2,7 @@ package foundation.identity.jsonld;
 
 import com.apicatalog.jsonld.JsonLd;
 import com.apicatalog.jsonld.api.JsonLdError;
+import com.apicatalog.jsonld.api.JsonLdOptions;
 import com.apicatalog.jsonld.api.impl.ToRdfApi;
 import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.media.MediaType;
@@ -262,10 +263,13 @@ public class JsonLDObject {
 
 	public RdfDataset toDataset() throws JsonLDException {
 
+		JsonLdOptions options = new JsonLdOptions();
+		if (this.getDocumentLoader() != null) options.setDocumentLoader(this.getDocumentLoader());
+		options.setOrdered(true);
+
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.toJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
-		if (this.getDocumentLoader() != null) toRdfApi.loader(this.getDocumentLoader());
-		toRdfApi.ordered(true);
+		toRdfApi.options(options);
 		try {
 			return toRdfApi.get();
 		} catch (JsonLdError ex) {

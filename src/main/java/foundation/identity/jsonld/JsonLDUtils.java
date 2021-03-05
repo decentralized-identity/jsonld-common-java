@@ -167,6 +167,30 @@ public class JsonLDUtils {
 		}
 	}
 
+	public static String jsonLdGetStringOrObjectId(Map<String, Object> jsonObject, String term) {
+
+		Object entry = jsonObject.get(term);
+		if (entry == null) return null;
+
+		if (entry instanceof String) {
+			return (String) entry;
+		} else if (entry instanceof List<?>) {
+			if (((List<Object>) entry).size() == 1 && ((List<Object>) entry).get(0) instanceof String) {
+				return (String) ((List<Object>) entry).get(0);
+			} else {
+				throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject + " (list)");
+			}
+		} else if (entry instanceof Map<?, ?>) {
+			String id = null;
+			if (((Map<String, Object>) entry).get("@id") instanceof String) id = (String) ((Map<String, Object>) entry).get("@id");
+			if (((Map<String, Object>) entry).get("id") instanceof String) id = (String) ((Map<String, Object>) entry).get("id");
+			if (id == null) throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject + " (map)");
+			return id;
+		} else {
+			throw new IllegalArgumentException("Cannot get string '" + term + "' from " + jsonObject);
+		}
+	}
+
 	public static List<String> jsonLdGetStringList(Map<String, Object> jsonObject, String term) {
 
 		Object entry = jsonObject.get(term);

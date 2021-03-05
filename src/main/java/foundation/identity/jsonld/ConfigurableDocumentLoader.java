@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class ConfigurableDocumentLoader implements DocumentLoader {
 
@@ -58,6 +59,8 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
             if (this.fileContexts.isEmpty() || this.fileContexts.contains(url))
                 return this.fileLoader.loadDocument(url, options);
         }
+
+        Logger.getLogger(this.getClass().getName()).warning("Cannot load context: " + url);
         return null;
     }
 

@@ -7,7 +7,8 @@ import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.processor.ExpansionProcessor;
 import foundation.identity.jsonld.JsonLDObject;
 
-import javax.json.JsonArray;
+import javax.json.*;
+import java.util.Map;
 
 public class Validation {
 
@@ -16,22 +17,46 @@ public class Validation {
         if (! valid) throw new IllegalStateException();
     }
 
+    private static final String UNDEFINED_TERM_URI = "urn:UNDEFINEDTERM";
+
+    private static void findUndefinedTerms(JsonArray jsonArray) {
+
+        for (JsonValue entry : jsonArray) {
+
+            if (entry instanceof JsonObject) findUndefinedTerms((JsonObject) entry);
+        }
+    }
+
+    private static void findUndefinedTerms(JsonObject jsonObject) {
+
+        for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
+
+            if (entry.getKey().startsWith(UNDEFINED_TERM_URI)) {
+
+                throw new RuntimeException("Undefined JSON-LD term: " + entry.getKey().substring(UNDEFINED_TERM_URI.length()));
+            }
+
+            if (entry.getValue() instanceof JsonArray) findUndefinedTerms((JsonArray) entry.getValue());
+            if (entry.getValue() instanceof JsonObject) findUndefinedTerms((JsonObject) entry.getValue());
+        }
+    }
+
     private static void validateJsonLd(JsonLDObject jsonLdObject) {
 
         try {
+
+            JsonObject expandContext = Json.createObjectBuilder().add("@vocab", Json.createValue(UNDEFINED_TERM_URI)).build();
 
             JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, jsonLdObject.toJsonObject());
 
             JsonLdOptions jsonLdOptions = new JsonLdOptions();
             jsonLdOptions.setDocumentLoader(jsonLdObject.getDocumentLoader());
+            jsonLdOptions.setExpandContext(expandContext);
 
-            JsonArray array = ExpansionProcessor.expand(jsonDocument, jsonLdOptions, false);
-            int originalCountWithoutAtContext = jsonLdObject.getJsonObject().size();
-            int expandedCount = array.getJsonObject(0).size();
+            JsonArray jsonArray = ExpansionProcessor.expand(jsonDocument, jsonLdOptions, false);
+            JsonObject jsonObject = jsonArray.getJsonObject(0);
 
-            if (jsonLdObject.getJsonObject().containsKey("@context")) originalCountWithoutAtContext--;
-
-            if (expandedCount != originalCountWithoutAtContext) throw new IllegalStateException("Undefined JSON-LD terms: " + expandedCount + " instead of " + originalCountWithoutAtContext);
+            findUndefinedTerms(jsonObject);
         } catch (JsonLdError ex) {
 
             throw new RuntimeException(ex.getMessage());

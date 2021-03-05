@@ -115,7 +115,7 @@
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>titanium-json-ld</artifactId>
-			<version>0.8.5</version>
+			<version>0.8.6</version>
 		</dependency>
 		<dependency>
 			<groupId>io.setl</groupId>

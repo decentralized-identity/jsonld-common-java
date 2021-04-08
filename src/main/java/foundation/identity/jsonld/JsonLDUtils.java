@@ -1,5 +1,7 @@
 package foundation.identity.jsonld;
 
+import com.google.api.client.util.DateTime;
+
 import java.net.URI;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,15 +15,11 @@ public class JsonLDUtils {
 	 */
 
 	public static final SimpleDateFormat DATE_FORMAT;
-	public static final SimpleDateFormat DATE_FORMAT_MILLIS;
 
 	static {
 
 		DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-		DATE_FORMAT_MILLIS = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
-		DATE_FORMAT_MILLIS.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	public static URI stringToUri(String string) {
@@ -33,15 +31,8 @@ public class JsonLDUtils {
 	}
 
 	public static Date stringToDate(String string) {
-		try {
-			return string == null ? null : DATE_FORMAT.parse(string);
-		} catch (ParseException ex) {
-			try {
-				return DATE_FORMAT_MILLIS.parse(string);
-			} catch (ParseException ex2) {
-				throw new RuntimeException(ex.getMessage(), ex);
-			}
-		}
+		DateTime dateTime = DateTime.parseRfc3339(string);
+		return new Date(dateTime.getValue());
 	}
 
 	public static String dateToString(Date date) {

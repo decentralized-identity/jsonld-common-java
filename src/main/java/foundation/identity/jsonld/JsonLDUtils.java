@@ -31,6 +31,7 @@ public class JsonLDUtils {
 	}
 
 	public static Date stringToDate(String string) {
+		if (string == null) return null;
 		DateTime dateTime = DateTime.parseRfc3339(string);
 		return new Date(dateTime.getValue());
 	}

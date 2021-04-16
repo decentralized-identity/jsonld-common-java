@@ -1,7 +1,7 @@
 package foundation.identity.jsonld;
 
-import com.apicatalog.jsonld.api.JsonLdError;
-import com.apicatalog.jsonld.api.JsonLdErrorCode;
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.JsonLdErrorCode;
 
 public class JsonLDException extends Exception {
 

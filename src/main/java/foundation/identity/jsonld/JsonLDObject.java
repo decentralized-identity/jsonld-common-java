@@ -1,9 +1,9 @@
 package foundation.identity.jsonld;
 
 import com.apicatalog.jsonld.JsonLd;
-import com.apicatalog.jsonld.api.JsonLdError;
-import com.apicatalog.jsonld.api.JsonLdOptions;
-import com.apicatalog.jsonld.api.impl.ToRdfApi;
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.JsonLdOptions;
+import com.apicatalog.jsonld.api.ToRdfApi;
 import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.lang.Keywords;
@@ -17,9 +17,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.setl.rdf.normalization.RdfNormalize;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 
-import javax.json.Json;
-import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;

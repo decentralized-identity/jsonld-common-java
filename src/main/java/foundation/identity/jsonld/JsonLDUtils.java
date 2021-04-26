@@ -3,7 +3,6 @@ package foundation.identity.jsonld;
 import com.google.api.client.util.DateTime;
 
 import java.net.URI;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;

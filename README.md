@@ -23,4 +23,4 @@ Dependency:
 
 <img align="left" src="https://raw.githubusercontent.com/decentralized-identity/universal-resolver/master/docs/logo-dif.png" width="115">
 
-Decentralized Identity Foundation - http://identity.foundation/
+Decentralized Identity Foundation - https://identity.foundation/

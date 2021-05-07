@@ -19,6 +19,21 @@ Dependency:
 		<scope>compile</scope>
 	</dependency>
 
+## Example
+
+Example code:
+
+    JsonLDObject jsonLdObject = JsonLDObject.fromJson(new FileReader("input.jsonld"));
+    
+    JsonLDObject jsonLDObject2 = JsonLDObject.builder()
+            .context(URI.create("https://example.com/mycontext/1.0"))
+            .type("SampleDocument")
+            .build();
+    
+    JsonLDUtils.jsonLdAdd(jsonLdObject, "property", jsonLDObject2);
+    
+    System.out.println(jsonLdObject.toJson(true));
+
 ## About
 
 <img align="left" src="https://raw.githubusercontent.com/decentralized-identity/universal-resolver/master/docs/logo-dif.png" width="115">

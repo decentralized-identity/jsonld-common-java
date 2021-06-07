@@ -96,6 +96,11 @@ public class JsonLDUtils {
 		}
 	}
 
+	public static void jsonLdAddAsJsonArray(JsonLDObject jsonLdObject, String term, Object value) {
+
+		jsonLdAddAsJsonArray(jsonLdObject, term, Collections.singletonList(value));
+	}
+
 	/*
 	 * remove
 	 */

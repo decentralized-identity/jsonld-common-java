@@ -25,12 +25,12 @@ Example code:
 
     JsonLDObject jsonLdObject = JsonLDObject.fromJson(new FileReader("input.jsonld"));
     
-    JsonLDObject jsonLDObject2 = JsonLDObject.builder()
+    JsonLDObject jsonLdObject2 = JsonLDObject.builder()
             .context(URI.create("https://example.com/mycontext/1.0"))
             .type("SampleDocument")
             .build();
     
-    JsonLDUtils.jsonLdAdd(jsonLdObject, "property", jsonLDObject2);
+    JsonLDUtils.jsonLdAdd(jsonLdObject, "property", jsonLdObject2);
     
     System.out.println(jsonLdObject.toJson(true));
 

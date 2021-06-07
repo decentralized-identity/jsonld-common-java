@@ -48,22 +48,22 @@ public class JsonLDDereferencer {
         }
     }
 
-    public static JsonLDObject findByIdInJsonLdObject(JsonLDObject jsonLDObject, URI uri, URI baseUri) {
+    public static JsonLDObject findByIdInJsonLdObject(JsonLDObject jsonLdObject, URI uri, URI baseUri) {
 
-        if (jsonLDObject.getId() != null) {
+        if (jsonLdObject.getId() != null) {
 
             URI findId = uri;
             if (! findId.isAbsolute() && baseUri == null) throw new IllegalArgumentException("No base URI for relative uri " + findId);
             findId = URI.create(UriResolver.resolve(baseUri, findId.toString()));
 
-            URI idUri = jsonLDObject.getId();
+            URI idUri = jsonLdObject.getId();
             if (! idUri.isAbsolute() && baseUri == null) throw new IllegalArgumentException("No base URI for relative 'id' uri " + uri);
             idUri = URI.create(UriResolver.resolve(baseUri, idUri.toString()));
 
-            if (findId.equals(idUri)) return jsonLDObject;
+            if (findId.equals(idUri)) return jsonLdObject;
         }
 
-        for (Object value : jsonLDObject.getJsonObject().values()) {
+        for (Object value : jsonLdObject.getJsonObject().values()) {
             if (value instanceof Map) {
                 JsonLDObject foundJsonLDObject = findByIdInJsonLdObject(JsonLDObject.fromJsonObject((Map<String, Object>) value), uri, baseUri);
                 if (foundJsonLDObject != null) return foundJsonLDObject;

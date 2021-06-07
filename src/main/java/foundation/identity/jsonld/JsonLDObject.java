@@ -72,10 +72,10 @@ public class JsonLDObject {
 		private URI id = null;
 
 		private boolean isBuilt = false;
-		protected JsonLDObject jsonLDObject;
+		protected JsonLDObject jsonLdObject;
 
-		protected Builder(JsonLDObject jsonLDObject) {
-			this.jsonLDObject = jsonLDObject;
+		protected Builder(JsonLDObject jsonLdObject) {
+			this.jsonLdObject = jsonLdObject;
 		}
 
 		public JsonLDObject build() {
@@ -84,14 +84,14 @@ public class JsonLDObject {
 			this.isBuilt = true;
 
 			// add JSON-LD properties
-			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLDObject, this.base.getJsonObject()); }
-			if (this.defaultContexts) { List<URI> contexts = new ArrayList<>(JsonLDObject.getDefaultJsonLDContexts(this.jsonLDObject.getClass())); if (this.contexts != null) contexts.addAll(this.contexts); if (! contexts.isEmpty()) this.contexts = contexts; }
-			if (this.defaultTypes) { List<String> types = new ArrayList<>(JsonLDObject.getDefaultJsonLDTypes(this.jsonLDObject.getClass())); if (this.types != null) types.addAll(this.types); if (! types.isEmpty()) this.types = types; }
-			if (this.contexts != null) if (this.forceContextsArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList())); else JsonLDUtils.jsonLdAdd(this.jsonLDObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
-			if (this.types != null) if (this.forceTypesArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types); else JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
-			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLDObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
+			if (this.base != null) { JsonLDUtils.jsonLdAddAll(this.jsonLdObject, this.base.getJsonObject()); }
+			if (this.defaultContexts) { List<URI> contexts = new ArrayList<>(JsonLDObject.getDefaultJsonLDContexts(this.jsonLdObject.getClass())); if (this.contexts != null) contexts.addAll(this.contexts); if (! contexts.isEmpty()) this.contexts = contexts; }
+			if (this.defaultTypes) { List<String> types = new ArrayList<>(JsonLDObject.getDefaultJsonLDTypes(this.jsonLdObject.getClass())); if (this.types != null) types.addAll(this.types); if (! types.isEmpty()) this.types = types; }
+			if (this.contexts != null) if (this.forceContextsArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLdObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList())); else JsonLDUtils.jsonLdAdd(this.jsonLdObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
+			if (this.types != null) if (this.forceTypesArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types); else JsonLDUtils.jsonLdAdd(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
+			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
 
-			return this.jsonLDObject;
+			return this.jsonLdObject;
 		}
 
 		public B base(JsonLDObject base) {

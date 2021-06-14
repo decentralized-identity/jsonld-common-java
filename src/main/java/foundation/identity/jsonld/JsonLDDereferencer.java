@@ -31,7 +31,7 @@ public class JsonLDDereferencer {
             JsonLDObject result = null;
 
             if (o instanceof JsonLDObject) return (JsonLDObject) o;
-            else if (o instanceof Map) return JsonLDObject.fromJsonObject((Map<String, Object>) o);
+            else if (o instanceof Map) return JsonLDObject.fromMap((Map<String, Object>) o);
             else if (o instanceof String) {
                 try {
                     uri = new URI((String) o);
@@ -65,7 +65,7 @@ public class JsonLDDereferencer {
 
         for (Object value : jsonLdObject.getJsonObject().values()) {
             if (value instanceof Map) {
-                JsonLDObject foundJsonLDObject = findByIdInJsonLdObject(JsonLDObject.fromJsonObject((Map<String, Object>) value), uri, baseUri);
+                JsonLDObject foundJsonLDObject = findByIdInJsonLdObject(JsonLDObject.fromMap((Map<String, Object>) value), uri, baseUri);
                 if (foundJsonLDObject != null) return foundJsonLDObject;
             }
             else if (value instanceof List) {
@@ -81,7 +81,7 @@ public class JsonLDDereferencer {
 
         for (Object value : list) {
             if (value instanceof Map) {
-                JsonLDObject foundJsonLDObject = findByIdInJsonLdObject(JsonLDObject.fromJsonObject((Map<String, Object>) value), uri, baseUri);
+                JsonLDObject foundJsonLDObject = findByIdInJsonLdObject(JsonLDObject.fromMap((Map<String, Object>) value), uri, baseUri);
                 if (foundJsonLDObject != null) return foundJsonLDObject;
             }
             else if (value instanceof List) {

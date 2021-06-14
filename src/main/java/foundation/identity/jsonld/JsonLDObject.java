@@ -147,7 +147,7 @@ public class JsonLDObject {
 		return new Builder(new JsonLDObject());
 	}
 
-	public static JsonLDObject fromJsonObject(Map<String, Object> jsonObject) {
+	public static JsonLDObject fromMap(Map<String, Object> jsonObject) {
 		return new JsonLDObject(jsonObject);
 	}
 
@@ -163,14 +163,22 @@ public class JsonLDObject {
 	 * Adding, getting, and removing the JSON-LD object
 	 */
 
+	public void addToJsonLDObject(JsonLDObject jsonLdObject, String term) {
+		JsonLDUtils.jsonLdAdd(jsonLdObject, term, this.getJsonObject());
+	}
+
 	public void addToJsonLDObject(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
-		JsonLDUtils.jsonLdAdd(jsonLdObject, term, this.getJsonObject());
+		addToJsonLDObject(jsonLdObject, term);
+	}
+
+	public void addToJsonLDObjectAsJsonArray(JsonLDObject jsonLdObject, String term) {
+		JsonLDUtils.jsonLdAddAsJsonArray(jsonLdObject, term, this.getJsonObject());
 	}
 
 	public void addToJsonLDObjectAsJsonArray(JsonLDObject jsonLdObject) {
 		String term = getDefaultJsonLDPredicate(this.getClass());
-		JsonLDUtils.jsonLdAddAsJsonArray(jsonLdObject, term, Collections.singletonList(this.getJsonObject()));
+		addToJsonLDObjectAsJsonArray(jsonLdObject, term);
 	}
 
 	public static <C extends JsonLDObject> C getFromJsonLDObject(Class<C> cl, JsonLDObject jsonLdObject) {
@@ -178,7 +186,7 @@ public class JsonLDObject {
 		Map<String, Object> jsonObject = JsonLDUtils.jsonLdGetJsonObject(jsonLdObject.getJsonObject(), term);
 		if (jsonObject == null) return null;
 		try {
-			Method method = cl.getMethod("fromJsonObject", Map.class);
+			Method method = cl.getMethod("fromMap", Map.class);
 			return (C) method.invoke(null, jsonObject);
 		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
 			throw new Error(ex);
@@ -309,6 +317,10 @@ public class JsonLDObject {
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
 		nQuadsWriter.write(rdfDataset);
 		return stringWriter.getBuffer().toString();
+	}
+
+	public Map<String, Object> toMap() {
+		return this.getJsonObject();
 	}
 
 	public synchronized JsonObject toJsonObject() {

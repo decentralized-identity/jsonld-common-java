@@ -53,24 +53,24 @@ public class JsonLDUtils {
 
 		Object jsonValueExisting = jsonLdObject.getJsonObject().get(term);
 
-		if (jsonValueExisting == null)  {
+		if (jsonValueExisting == null) {
 			if (value instanceof List<?> && ((List<?>) value).size() == 0)
 				;
 			else if (value instanceof List<?> && ((List<?>) value).size() == 1)
-				jsonLdObject.getJsonObject().put(term, ((List<?>) value).get(0));
+				jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(((List<?>) value).get(0)));
 			else if (value instanceof List<?>)
-				jsonLdObject.getJsonObject().put(term, value);
+				jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(value));
 			else
-				jsonLdObject.getJsonObject().put(term, value);
-		} else if (jsonValueExisting instanceof List<?>)  {
+				jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(value));
+		} else if (jsonValueExisting instanceof List<?>) {
 			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
 			jsonArray.add(value);
-			jsonLdObject.getJsonObject().put(term, jsonArray);
+			jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(jsonArray));
 		} else {
 			List<Object> jsonArray = new ArrayList<>();
 			jsonArray.add(jsonValueExisting);
 			jsonArray.add(value);
-			jsonLdObject.getJsonObject().put(term, jsonArray);
+			jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(jsonArray));
 		}
 	}
 
@@ -83,16 +83,16 @@ public class JsonLDUtils {
 
 		if (jsonValueExisting == null)  {
 			List<Object> jsonArray = new ArrayList<>(values);
-			jsonLdObject.getJsonObject().put(term, jsonArray);
+			jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(jsonArray));
 		} else if (jsonValueExisting instanceof List<?>)  {
 			List<Object> jsonArray = new ArrayList<>((List<Object>) jsonValueExisting);
 			jsonArray.addAll(values);
-			jsonLdObject.getJsonObject().put(term, jsonArray);
+			jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(jsonArray));
 		} else {
 			List<Object> jsonArray = new ArrayList<>();
 			jsonArray.add(jsonValueExisting);
 			jsonArray.addAll(values);
-			jsonLdObject.getJsonObject().put(term, jsonArray);
+			jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(jsonArray));
 		}
 	}
 
@@ -216,5 +216,26 @@ public class JsonLDUtils {
 			return ((List<Object>) entry).contains(value);
 		else
 			return false;
+	}
+
+	/*
+	 * Helper methods
+	 */
+
+	private static Object jsonLdObjectOrId(Object value) {
+		if (value instanceof Map<?, ?>) {
+			Map<String, Object> map = (Map<String, Object>) value;
+			String id = (String) map.get(JsonLDKeywords.JSONLD_TERM_ID);
+			if (map.size() == 1 && id != null)
+				return id;
+			else
+				return value;
+		} else if (value instanceof List<?>) {
+			List<Object> valueList = new ArrayList<>();
+			for (Object valueObject : ((List<?>) value)) valueList.add(jsonLdObjectOrId(valueObject));
+			return valueList;
+		} else {
+			return value;
+		}
 	}
 }

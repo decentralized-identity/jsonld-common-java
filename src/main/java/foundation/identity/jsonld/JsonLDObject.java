@@ -147,7 +147,7 @@ public class JsonLDObject {
 		return new Builder(new JsonLDObject());
 	}
 
-	public static JsonLDObject fromMap(Map<String, Object> jsonObject) {
+	public static JsonLDObject fromJsonObject(Map<String, Object> jsonObject) {
 		return new JsonLDObject(jsonObject);
 	}
 
@@ -157,6 +157,10 @@ public class JsonLDObject {
 
 	public static JsonLDObject fromJson(String json) {
 		return new JsonLDObject(readJson(json));
+	}
+
+	public static JsonLDObject fromMap(Map<String, Object> jsonObject) {
+		return new JsonLDObject(jsonObject);
 	}
 
 	/*

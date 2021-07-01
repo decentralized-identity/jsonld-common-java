@@ -7,6 +7,8 @@ import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
 import com.apicatalog.jsonld.loader.FileLoader;
 import com.apicatalog.jsonld.loader.HttpLoader;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -28,6 +30,7 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     private boolean enableFile = false;
 
     private Map<URI, JsonDocument> localCache = new HashMap<URI, JsonDocument> ();
+    private Cache<URI, Document> remoteCache = null;
     private List<URI> httpContexts = new ArrayList<URI>();
     private List<URI> httpsContexts = new ArrayList<URI>();
     private List<URI> fileContexts = new ArrayList<URI>();
@@ -44,20 +47,35 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     @Override
     public Document loadDocument(URI url, DocumentLoaderOptions options) throws JsonLdError {
 
-        if (this.enableLocalCache && this.localCache.containsKey(url)) {
-            return this.localCache.get(url);
+        if (this.isEnableLocalCache() && this.getLocalCache().containsKey(url)) {
+            return this.getLocalCache().get(url);
         }
-        if (enableHttp && "http".equals(url.getScheme().toLowerCase())) {
-            if (this.httpContexts.isEmpty() || this.httpContexts.contains(url))
-                return this.httpLoader.loadDocument(url, options);
+        if (this.isEnableHttp() && "http".equalsIgnoreCase(url.getScheme())) {
+            if (!this.getHttpContexts().isEmpty() && !this.getHttpContexts().contains(url)) return null;
+            Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
+            if (document == null) {
+                document = this.getHttpLoader().loadDocument(url, options);
+                if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
+            }
+            return document;
         }
-        if (enableHttps && "https".equals(url.getScheme().toLowerCase())) {
-            if (this.httpsContexts.isEmpty() || this.httpsContexts.contains(url))
-                return this.httpLoader.loadDocument(url, options);
+        if (this.isEnableHttps() && "https".equalsIgnoreCase(url.getScheme())) {
+            if (!this.getHttpsContexts().isEmpty() && !this.getHttpsContexts().contains(url)) return null;
+            Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
+            if (document == null) {
+                document = this.getHttpLoader().loadDocument(url, options);
+                if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
+            }
+            return document;
         }
-        if (enableFile && "file".equals(url.getScheme().toLowerCase())) {
-            if (this.fileContexts.isEmpty() || this.fileContexts.contains(url))
-                return this.fileLoader.loadDocument(url, options);
+        if (this.isEnableFile() && "file".equalsIgnoreCase(url.getScheme())) {
+            if (!this.getFileContexts().isEmpty() && !this.getFileContexts().contains(url)) return null;
+            Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
+            if (document == null) {
+                document = this.getFileLoader().loadDocument(url, options);
+                if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
+            }
+            return document;
         }
 
         Logger.getLogger(this.getClass().getName()).warning("Cannot load context: " + url);
@@ -130,6 +148,14 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
 
     public void setLocalCache(Map<URI, JsonDocument> localCache) {
         this.localCache = localCache;
+    }
+
+    public Cache<URI, Document> getRemoteCache() {
+        return this.remoteCache;
+    }
+
+    public void setRemoteCache(Cache<URI, Document> remoteCache) {
+        this.remoteCache = remoteCache;
     }
 
     public List<URI> getHttpContexts() {

@@ -62,7 +62,7 @@ public class Validation {
             findUndefinedTerms(jsonObject);
         } catch (JsonLdError ex) {
 
-            throw new RuntimeException(ex.getMessage());
+            throw new RuntimeException(ex.getMessage(), ex);
         }
     }
 
@@ -74,7 +74,7 @@ public class Validation {
         } catch (Exception ex) {
 
             if (ex.getMessage() != null && ! ex.getMessage().isEmpty()) message = message + " (" + ex.getMessage().trim() + ")";
-            throw new IllegalStateException(message);
+            throw new IllegalStateException(message, ex);
         }
     }
 

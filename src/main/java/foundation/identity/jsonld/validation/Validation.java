@@ -80,6 +80,6 @@ public class Validation {
 
     public static void validate(JsonLDObject jsonLdObject) throws IllegalStateException {
 
-        validateRun(() -> { validateJsonLd(jsonLdObject); }, "Unknown JSON-LD terms found.");
+        validateRun(() -> { validateJsonLd(jsonLdObject); }, "JSON-LD problem.");
     }
 }

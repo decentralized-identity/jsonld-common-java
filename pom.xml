@@ -123,7 +123,7 @@
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>titanium-json-ld</artifactId>
-			<version>1.0.0</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.setl</groupId>

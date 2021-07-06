@@ -70,6 +70,7 @@ public class JsonLDObject {
 		private List<URI> contexts = null;
 		private List<String> types = null;
 		private URI id = null;
+		private Map<String, Object> properties = null;
 
 		private boolean isBuilt = false;
 		protected JsonLDObject jsonLdObject;
@@ -90,6 +91,7 @@ public class JsonLDObject {
 			if (this.contexts != null) if (this.forceContextsArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLdObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList())); else JsonLDUtils.jsonLdAdd(this.jsonLdObject, Keywords.CONTEXT, this.contexts.stream().map(JsonLDUtils::uriToString).collect(Collectors.toList()));
 			if (this.types != null) if (this.forceTypesArray) JsonLDUtils.jsonLdAddAsJsonArray(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types); else JsonLDUtils.jsonLdAdd(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_TYPE, this.types);
 			if (this.id != null) JsonLDUtils.jsonLdAdd(this.jsonLdObject, JsonLDKeywords.JSONLD_TERM_ID, JsonLDUtils.uriToString(this.id));
+			if (this.properties != null) JsonLDUtils.jsonLdAddAll(this.jsonLdObject, this.properties);
 
 			return this.jsonLdObject;
 		}
@@ -139,6 +141,11 @@ public class JsonLDObject {
 
 		public B id(URI id) {
 			this.id = id;
+			return (B) this;
+		}
+
+		public B properties(Map<String, Object> properties) {
+			this.properties = properties;
 			return (B) this;
 		}
 	}

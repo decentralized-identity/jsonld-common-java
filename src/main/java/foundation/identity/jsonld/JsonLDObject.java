@@ -241,7 +241,8 @@ public class JsonLDObject {
 	}
 
 	public List<URI> getContexts() {
-		return JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), Keywords.CONTEXT).stream().map(JsonLDUtils::stringToUri).collect(Collectors.toList());
+		List<String> contextStrings = JsonLDUtils.jsonLdGetStringList(this.getJsonObject(), Keywords.CONTEXT);
+		return contextStrings == null ? null : contextStrings.stream().map(JsonLDUtils::stringToUri).collect(Collectors.toList());
 	}
 
 	public final List<String> getTypes() {

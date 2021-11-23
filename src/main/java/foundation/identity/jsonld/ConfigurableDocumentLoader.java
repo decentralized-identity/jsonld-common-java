@@ -3,15 +3,15 @@ package foundation.identity.jsonld;
 import com.apicatalog.jsonld.JsonLdError;
 import com.apicatalog.jsonld.document.Document;
 import com.apicatalog.jsonld.document.JsonDocument;
+import com.apicatalog.jsonld.http.DefaultHttpClient;
+import com.apicatalog.jsonld.http.HttpClient;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
 import com.apicatalog.jsonld.loader.FileLoader;
 import com.apicatalog.jsonld.loader.HttpLoader;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 
 public class ConfigurableDocumentLoader implements DocumentLoader {
 
-    private HttpClient httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
+    private HttpClient httpClient = DefaultHttpClient.defaultInstance();
     private DocumentLoader httpLoader = new HttpLoader(this.httpClient);
     private DocumentLoader fileLoader = new FileLoader();
 

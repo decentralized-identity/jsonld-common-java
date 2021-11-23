@@ -37,7 +37,7 @@ public class JsonLDObject {
 	public static final URI[] DEFAULT_JSONLD_CONTEXTS = new URI[] { };
 	public static final String[] DEFAULT_JSONLD_TYPES = new String[] { };
 	public static final String DEFAULT_JSONLD_PREDICATE = null;
-	public static final DocumentLoader DEFAULT_DOCUMENT_LOADER = null;
+	public static final DocumentLoader DEFAULT_DOCUMENT_LOADER = ConfigurableDocumentLoader.DOCUMENT_LOADER;
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 	private static final ObjectWriter objectWriterDefault = objectMapper.writer();

@@ -5,6 +5,7 @@ import com.apicatalog.jsonld.document.Document;
 import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.DefaultHttpClient;
 import com.apicatalog.jsonld.http.HttpClient;
+import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
 import com.apicatalog.jsonld.loader.FileLoader;
@@ -34,6 +35,13 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     private List<URI> httpContexts = new ArrayList<URI>();
     private List<URI> httpsContexts = new ArrayList<URI>();
     private List<URI> fileContexts = new ArrayList<URI>();
+
+    public static final DocumentLoader DOCUMENT_LOADER;
+
+    static {
+
+        DOCUMENT_LOADER = new ConfigurableDocumentLoader();
+    }
 
     public ConfigurableDocumentLoader() {
 

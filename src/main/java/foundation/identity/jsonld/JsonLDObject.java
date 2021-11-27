@@ -158,6 +158,8 @@ public class JsonLDObject {
 		return new JsonLDObject(jsonObject);
 	}
 
+	public static JsonLDObject fromJsonLDObject(JsonLDObject jsonLDObject) { return fromJsonObject(jsonLDObject.getJsonObject()); }
+
 	public static JsonLDObject fromJson(Reader reader) {
 		return new JsonLDObject(readJson(reader));
 	}

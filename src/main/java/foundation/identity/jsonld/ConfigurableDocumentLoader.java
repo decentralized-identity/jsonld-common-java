@@ -4,8 +4,6 @@ import com.apicatalog.jsonld.JsonLdError;
 import com.apicatalog.jsonld.document.Document;
 import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.DefaultHttpClient;
-import com.apicatalog.jsonld.http.HttpClient;
-import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
 import com.apicatalog.jsonld.loader.FileLoader;
@@ -21,9 +19,11 @@ import java.util.logging.Logger;
 
 public class ConfigurableDocumentLoader implements DocumentLoader {
 
-    private HttpClient httpClient = DefaultHttpClient.defaultInstance();
-    private DocumentLoader httpLoader = new HttpLoader(this.httpClient);
-    private DocumentLoader fileLoader = new FileLoader();
+    private static DocumentLoader DEFAULT_HTTP_LOADER;
+    private static DocumentLoader DEFAULT_FILE_LOADER;
+
+    private DocumentLoader httpLoader;
+    private DocumentLoader fileLoader;
 
     private boolean enableLocalCache = true;
     private boolean enableHttp = false;
@@ -43,6 +43,24 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
         DOCUMENT_LOADER = new ConfigurableDocumentLoader();
     }
 
+    public static DocumentLoader getDefaultHttpLoader() {
+        if (DEFAULT_HTTP_LOADER == null) DEFAULT_HTTP_LOADER = new HttpLoader(DefaultHttpClient.defaultInstance());
+        return DEFAULT_HTTP_LOADER;
+    }
+
+    public static DocumentLoader getDefaultFileLoader() {
+        if (DEFAULT_FILE_LOADER == null) DEFAULT_FILE_LOADER = new FileLoader();
+        return DEFAULT_FILE_LOADER;
+    }
+
+    public static void setDefaultHttpLoader(DocumentLoader defaultHttpLoader) {
+        DEFAULT_HTTP_LOADER = defaultHttpLoader;
+    }
+
+    public static void setDefaultFileLoader(DocumentLoader defaultFileLoader) {
+        DEFAULT_FILE_LOADER = defaultFileLoader;
+    }
+
     public ConfigurableDocumentLoader() {
 
     }
@@ -60,27 +78,33 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
         }
         if (this.isEnableHttp() && "http".equalsIgnoreCase(url.getScheme())) {
             if (!this.getHttpContexts().isEmpty() && !this.getHttpContexts().contains(url)) return null;
+            DocumentLoader httpLoader = this.getHttpLoader();
+            if (httpLoader == null) httpLoader = getDefaultHttpLoader();
             Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
             if (document == null) {
-                document = this.getHttpLoader().loadDocument(url, options);
+                document = httpLoader.loadDocument(url, options);
                 if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
             }
             return document;
         }
         if (this.isEnableHttps() && "https".equalsIgnoreCase(url.getScheme())) {
             if (!this.getHttpsContexts().isEmpty() && !this.getHttpsContexts().contains(url)) return null;
+            DocumentLoader httpLoader = this.getHttpLoader();
+            if (httpLoader == null) httpLoader = getDefaultHttpLoader();
             Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
             if (document == null) {
-                document = this.getHttpLoader().loadDocument(url, options);
+                document = httpLoader.loadDocument(url, options);
                 if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
             }
             return document;
         }
         if (this.isEnableFile() && "file".equalsIgnoreCase(url.getScheme())) {
             if (!this.getFileContexts().isEmpty() && !this.getFileContexts().contains(url)) return null;
+            DocumentLoader fileLoader = this.getFileLoader();
+            if (fileLoader == null) fileLoader = getDefaultFileLoader();
             Document document = this.getRemoteCache() == null ? null : this.getRemoteCache().getIfPresent(url);
             if (document == null) {
-                document = this.getFileLoader().loadDocument(url, options);
+                document = fileLoader.loadDocument(url, options);
                 if (this.getRemoteCache() != null) this.getRemoteCache().put(url, document);
             }
             return document;
@@ -93,14 +117,6 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     /*
      * Getters and setters
      */
-
-    public HttpClient getHttpClient() {
-        return this.httpClient;
-    }
-
-    public void setHttpClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
-    }
 
     public DocumentLoader getHttpLoader() {
         return this.httpLoader;

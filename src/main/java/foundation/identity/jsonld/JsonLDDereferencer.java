@@ -13,15 +13,24 @@ public class JsonLDDereferencer {
 
         private JsonLDObject jsonLdDocument;
         private URI baseUri;
+        private boolean ignoreErrors;
+
+        public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean ignoreErrors) {
+            this.jsonLdDocument = jsonLdDocument;
+            this.baseUri = baseUri;
+            this.ignoreErrors = ignoreErrors;
+        }
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
+            this.ignoreErrors = false;
         }
 
         public Function(JsonLDObject jsonLdDocument) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = null;
+            this.ignoreErrors = false;
         }
 
         @Override
@@ -38,13 +47,13 @@ public class JsonLDDereferencer {
                     result = findByIdInJsonLdObject(this.jsonLdDocument, uri, this.baseUri);
                     if (result != null) return result;
                 } catch (URISyntaxException ex) {
-                    throw new IllegalArgumentException("Cannot dereference non-URI string: " + o);
+                    if (this.ignoreErrors) return null; else throw new IllegalArgumentException("Cannot dereference non-URI string: " + o);
                 }
             } else {
-                throw new IllegalArgumentException("Cannot dereference non-URI value: " + o);
+                if (this.ignoreErrors) return null; throw new IllegalArgumentException("Cannot dereference non-URI value: " + o);
             }
 
-            throw new IllegalArgumentException("No result for dereferencing URI " + uri);
+            if (this.ignoreErrors) return null; throw new IllegalArgumentException("No result for dereferencing URI " + uri);
         }
     }
 

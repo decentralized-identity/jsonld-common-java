@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class JsonLDDereferencer {
 
@@ -14,23 +15,34 @@ public class JsonLDDereferencer {
         private JsonLDObject jsonLdDocument;
         private URI baseUri;
         private boolean ignoreDereferencingErrors;
+        private Predicate<JsonLDObject> predicate;
+
+        public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean ignoreDereferencingErrors, Predicate<JsonLDObject> predicate) {
+            this.jsonLdDocument = jsonLdDocument;
+            this.baseUri = baseUri;
+            this.ignoreDereferencingErrors = ignoreDereferencingErrors;
+            this.predicate = predicate;
+        }
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean ignoreDereferencingErrors) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
             this.ignoreDereferencingErrors = ignoreDereferencingErrors;
+            this.predicate = null;
         }
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
             this.ignoreDereferencingErrors = false;
+            this.predicate = null;
         }
 
         public Function(JsonLDObject jsonLdDocument) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = null;
             this.ignoreDereferencingErrors = false;
+            this.predicate = null;
         }
 
         @Override
@@ -39,21 +51,33 @@ public class JsonLDDereferencer {
             URI uri = null;
             JsonLDObject result = null;
 
-            if (o instanceof JsonLDObject) return (JsonLDObject) o;
-            else if (o instanceof Map) return JsonLDObject.fromMap((Map<String, Object>) o);
-            else if (o instanceof String) {
+            if (o instanceof JsonLDObject) {
+                result = (JsonLDObject) o;
+            } else if (o instanceof Map) {
+                result = JsonLDObject.fromMap((Map<String, Object>) o);
+            } else if (o instanceof String) {
                 try {
                     uri = new URI((String) o);
-                    result = findByIdInJsonLdObject(this.jsonLdDocument, uri, this.baseUri);
-                    if (result != null) return result;
                 } catch (URISyntaxException ex) {
                     if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Cannot dereference non-URI string: " + o);
                 }
+                result = findByIdInJsonLdObject(this.jsonLdDocument, uri, this.baseUri);
             } else {
-                if (this.ignoreDereferencingErrors) return null; throw new IllegalArgumentException("Cannot dereference non-URI value: " + o);
+                if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Cannot dereference non-URI value: " + o);
             }
 
-            if (this.ignoreDereferencingErrors) return null; throw new IllegalArgumentException("No result for dereferencing URI " + uri);
+            if (result != null && this.predicate != null) {
+                boolean test = this.predicate.test(result);
+                if (!test) {
+                    if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Unacceptable result for dereferencing URI " + uri);
+                }
+            }
+
+            if (result == null) {
+                if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("No result for dereferencing URI " + uri);
+            }
+
+            return result;
         }
     }
 

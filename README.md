@@ -4,9 +4,7 @@
 
 ## Information
 
-This is a work-in-progress implementation of helper objects and functions for JSON-LD documents.
-
-Not ready for production use! Use at your own risk! Pull requests welcome.
+This is an implementation of helper objects and functions for JSON-LD documents.
 
 ## Maven
 
@@ -15,8 +13,7 @@ Dependency:
 	<dependency>
 		<groupId>decentralized-identity</groupId>
 		<artifactId>jsonld-common-java</artifactId>
-		<version>0.1-SNAPSHOT</version>
-		<scope>compile</scope>
+		<version>1.0.0</version>
 	</dependency>
 
 ## Example

@@ -8,7 +8,18 @@ This is an implementation of helper objects and functions for JSON-LD documents.
 
 ## Maven
 
+Build:
+
+	mvn clean install
+
 Dependency:
+
+	<repositories>
+		<repository>
+			<id>danubetech-maven-public</id>
+			<url>https://repo.danubetech.com/repository/maven-public/</url>
+		</repository>
+	</repositories>
 
 	<dependency>
 		<groupId>decentralized-identity</groupId>

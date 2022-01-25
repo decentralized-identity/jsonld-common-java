@@ -1,5 +1,3 @@
-![DIF Logo](https://raw.githubusercontent.com/decentralized-identity/universal-resolver/master/docs/logo-dif.png)
-
 # jsonld-common-java
 
 ## Information
@@ -44,7 +42,7 @@ Example code:
 
 ## About
 
-<img align="left" src="https://raw.githubusercontent.com/decentralized-identity/jsonld-common-java/master/docs/logo-dif.png" width="115">
+<img align="left" src="https://raw.githubusercontent.com/decentralized-identity/jsonld-common-java/main/docs/logo-dif.png" width="115">
 
 Decentralized Identity Foundation - https://identity.foundation/
 

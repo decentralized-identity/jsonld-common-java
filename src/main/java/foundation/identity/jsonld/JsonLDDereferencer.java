@@ -14,39 +14,28 @@ public class JsonLDDereferencer {
 
         private JsonLDObject jsonLdDocument;
         private URI baseUri;
-        private boolean ignoreDereferencingErrors;
         private Predicate<JsonLDObject> predicate;
 
-        public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean ignoreDereferencingErrors, Predicate<JsonLDObject> predicate) {
+        public Function(JsonLDObject jsonLdDocument, URI baseUri, Predicate<JsonLDObject> predicate) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
-            this.ignoreDereferencingErrors = ignoreDereferencingErrors;
             this.predicate = predicate;
-        }
-
-        public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean ignoreDereferencingErrors) {
-            this.jsonLdDocument = jsonLdDocument;
-            this.baseUri = baseUri;
-            this.ignoreDereferencingErrors = ignoreDereferencingErrors;
-            this.predicate = null;
         }
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
-            this.ignoreDereferencingErrors = false;
             this.predicate = null;
         }
 
         public Function(JsonLDObject jsonLdDocument) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = null;
-            this.ignoreDereferencingErrors = false;
             this.predicate = null;
         }
 
         @Override
-        public JsonLDObject apply(Object o) {
+        public JsonLDObject apply(Object o) throws JsonLDDereferencingException {
 
             URI uri = null;
             JsonLDObject result = null;
@@ -59,22 +48,22 @@ public class JsonLDDereferencer {
                 try {
                     uri = new URI((String) o);
                 } catch (URISyntaxException ex) {
-                    if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Cannot dereference non-URI string: " + o);
+                    throw new JsonLDDereferencingException("Cannot dereference non-URI string: " + o);
                 }
                 result = findByIdInJsonLdObject(this.jsonLdDocument, uri, this.baseUri);
             } else {
-                if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Cannot dereference non-URI value: " + o);
+                throw new JsonLDDereferencingException("Cannot dereference non-URI value: " + o);
             }
 
             if (result != null && this.predicate != null) {
                 boolean test = this.predicate.test(result);
                 if (!test) {
-                    if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("Unacceptable result for dereferencing URI " + uri);
+                    throw new JsonLDDereferencingException("Unacceptable result for dereferencing URI " + uri);
                 }
             }
 
             if (result == null) {
-                if (this.ignoreDereferencingErrors) return null; else throw new IllegalArgumentException("No result for dereferencing URI " + uri);
+                throw new JsonLDDereferencingException("No result for dereferencing URI " + uri);
             }
 
             return result;

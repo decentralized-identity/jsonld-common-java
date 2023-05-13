@@ -34,22 +34,22 @@ public class JsonLDDereferencer {
         public Function(JsonLDObject jsonLdDocument, URI baseUri, Predicate<JsonLDObject> predicate) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
-            this.allowRelativeWithoutBaseUri = false;
+            this.allowRelativeWithoutBaseUri = true;
             this.predicate = predicate;
         }
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = baseUri;
-            this.allowRelativeWithoutBaseUri = false;
+            this.allowRelativeWithoutBaseUri = true;
             this.predicate = null;
         }
 
         public Function(JsonLDObject jsonLdDocument) {
             this.jsonLdDocument = jsonLdDocument;
             this.baseUri = null;
+            this.allowRelativeWithoutBaseUri = true;
             this.predicate = null;
-            this.allowRelativeWithoutBaseUri = false;
         }
 
         @Override
@@ -75,7 +75,7 @@ public class JsonLDDereferencer {
 
             if (result != null && this.predicate != null) {
                 boolean test = this.predicate.test(result);
-                if (!test) {
+                if (! test) {
                     throw new JsonLDDereferencingException("Unacceptable result for dereferencing URI " + uri);
                 }
             }
@@ -120,7 +120,7 @@ public class JsonLDDereferencer {
     }
 
     public static JsonLDObject findByIdInJsonLdObject(JsonLDObject jsonLdObject, URI uri, URI baseUri) {
-        return findByIdInJsonLdObject(jsonLdObject, uri, baseUri, false);
+        return findByIdInJsonLdObject(jsonLdObject, uri, baseUri, true);
     }
 
     private static JsonLDObject findByIdInList(List<Object> list, URI uri, URI baseUri, boolean allowRelativeWithoutBaseUri) {

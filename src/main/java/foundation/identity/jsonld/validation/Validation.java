@@ -6,10 +6,7 @@ import com.apicatalog.jsonld.document.JsonDocument;
 import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.processor.ExpansionProcessor;
 import foundation.identity.jsonld.JsonLDObject;
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonValue;
+import jakarta.json.*;
 
 import java.util.Map;
 
@@ -22,10 +19,23 @@ public class Validation {
 
     private static final String UNDEFINED_TERM_URI = "urn:UNDEFINEDTERM";
 
+    private static void checkUndefinedTerm(String string) {
+        if (string.startsWith(UNDEFINED_TERM_URI)) {
+            throw new RuntimeException("Undefined JSON-LD term: " + string.substring(UNDEFINED_TERM_URI.length()));
+        }
+    }
+
+    private static void checkUndefinedTerm(JsonString jsonString) {
+        if (jsonString.getString().startsWith(UNDEFINED_TERM_URI)) {
+            throw new RuntimeException("Undefined JSON-LD term: " + jsonString.getString().substring(UNDEFINED_TERM_URI.length()));
+        }
+    }
+
     private static void findUndefinedTerms(JsonArray jsonArray) {
 
         for (JsonValue entry : jsonArray) {
 
+            if (entry instanceof JsonString) checkUndefinedTerm((JsonString) entry);
             if (entry instanceof JsonObject) findUndefinedTerms((JsonObject) entry);
         }
     }
@@ -34,11 +44,9 @@ public class Validation {
 
         for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
 
-            if (entry.getKey().startsWith(UNDEFINED_TERM_URI)) {
+            checkUndefinedTerm(entry.getKey());
 
-                throw new RuntimeException("Undefined JSON-LD term: " + entry.getKey().substring(UNDEFINED_TERM_URI.length()));
-            }
-
+            if (entry.getValue() instanceof JsonString) checkUndefinedTerm((JsonString) entry.getValue());
             if (entry.getValue() instanceof JsonArray) findUndefinedTerms((JsonArray) entry.getValue());
             if (entry.getValue() instanceof JsonObject) findUndefinedTerms((JsonObject) entry.getValue());
         }

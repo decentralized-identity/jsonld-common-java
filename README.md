@@ -22,7 +22,7 @@ Dependency:
 	<dependency>
 		<groupId>decentralized-identity</groupId>
 		<artifactId>jsonld-common-java</artifactId>
-		<version>1.4.0</version>
+		<version>1.5.0</version>
 	</dependency>
 
 ## Example

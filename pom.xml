@@ -129,6 +129,12 @@
 			<groupId>io.setl</groupId>
 			<artifactId>rdf-urdna</artifactId>
 			<version>1.2</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.apicatalog</groupId>
+					<artifactId>titanium-json-ld-jre8</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish</groupId>

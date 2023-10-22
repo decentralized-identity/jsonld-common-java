@@ -285,8 +285,7 @@ public class JsonLDObject {
 
 	public RdfDataset toDataset() throws JsonLDException {
 
-		JsonLdOptions options = new JsonLdOptions();
-		if (this.getDocumentLoader() != null) options.setDocumentLoader(this.getDocumentLoader());
+		JsonLdOptions options = this.getDocumentLoader() != null ? new JsonLdOptions(this.getDocumentLoader()) : new JsonLdOptions();
 		options.setOrdered(true);
 
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.toJsonObject());

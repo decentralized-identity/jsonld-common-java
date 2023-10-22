@@ -88,6 +88,6 @@ public class Validation {
 
     public static void validate(JsonLDObject jsonLdObject) throws IllegalStateException {
 
-        validateRun(() -> { validateJsonLd(jsonLdObject); }, "JSON-LD problem.");
+        validateRun(() -> validateJsonLd(jsonLdObject), "JSON-LD problem.");
     }
 }

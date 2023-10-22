@@ -12,10 +12,10 @@ public class JsonLDDereferencer {
 
     public static class Function implements java.util.function.Function<Object, JsonLDObject> {
 
-        private JsonLDObject jsonLdDocument;
-        private URI baseUri;
-        private boolean allowRelativeWithoutBaseUri;
-        private Predicate<JsonLDObject> predicate;
+        private final JsonLDObject jsonLdDocument;
+        private final URI baseUri;
+        private final boolean allowRelativeWithoutBaseUri;
+        private final Predicate<JsonLDObject> predicate;
 
         public Function(JsonLDObject jsonLdDocument, URI baseUri, boolean allowRelativeWithoutBaseUri, Predicate<JsonLDObject> predicate) {
             this.jsonLdDocument = jsonLdDocument;

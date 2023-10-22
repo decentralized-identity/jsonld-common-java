@@ -54,7 +54,7 @@ public class JsonLDUtils {
 		Object jsonValueExisting = jsonLdObject.getJsonObject().get(term);
 
 		if (jsonValueExisting == null) {
-			if (value instanceof List<?> && ((List<?>) value).size() == 0)
+			if (value instanceof List<?> && ((List<?>) value).isEmpty())
 				;
 			else if (value instanceof List<?> && ((List<?>) value).size() == 1)
 				jsonLdObject.getJsonObject().put(term, jsonLdObjectOrId(((List<?>) value).get(0)));
@@ -74,10 +74,10 @@ public class JsonLDUtils {
 		}
 	}
 
-	public static void jsonLdAddAsJsonArray(JsonLDObject jsonLdObject, String term, List<? extends Object> values) {
+	public static void jsonLdAddAsJsonArray(JsonLDObject jsonLdObject, String term, List<?> values) {
 
 		if (jsonLdObject.getJsonObject() == null || term == null || values == null) throw new NullPointerException();
-		if (values.size() < 1) return;
+		if (values.isEmpty()) return;
 
 		Object jsonValueExisting = jsonLdObject.getJsonObject().get(term);
 
@@ -211,7 +211,7 @@ public class JsonLDUtils {
 		if (entry == null) return false;
 
 		if (entry instanceof String)
-			return ((String) entry).equals(value);
+			return entry.equals(value);
 		else if (entry instanceof List<?>)
 			return ((List<Object>) entry).contains(value);
 		else

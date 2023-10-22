@@ -9,10 +9,10 @@ class TestUtil {
 	static String read(InputStream inputStream) throws Exception {
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 
 		String line;
-		while ((line = reader.readLine()) != null) buffer.append(line + "\n");
+		while ((line = reader.readLine()) != null) buffer.append(line).append("\n");
 
 		return buffer.toString();
 	}

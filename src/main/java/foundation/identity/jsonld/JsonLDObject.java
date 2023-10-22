@@ -48,7 +48,7 @@ public class JsonLDObject {
 
 	@JsonCreator
 	public JsonLDObject() {
-		this(new LinkedHashMap<String, Object>());
+		this(new LinkedHashMap<>());
 	}
 
 	protected JsonLDObject(Map<String, Object> jsonObject) {
@@ -73,7 +73,7 @@ public class JsonLDObject {
 		private Map<String, Object> properties = null;
 
 		private boolean isBuilt = false;
-		protected JsonLDObject jsonLdObject;
+		protected final JsonLDObject jsonLdObject;
 
 		protected Builder(JsonLDObject jsonLdObject) {
 			this.jsonLdObject = jsonLdObject;
@@ -151,7 +151,7 @@ public class JsonLDObject {
 	}
 
 	public static Builder<? extends Builder<?>> builder() {
-		return new Builder(new JsonLDObject());
+		return new Builder<>(new JsonLDObject());
 	}
 
 	public static JsonLDObject fromJsonObject(Map<String, Object> jsonObject) {

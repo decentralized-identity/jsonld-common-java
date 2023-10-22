@@ -5,7 +5,7 @@ import com.apicatalog.jsonld.JsonLdErrorCode;
 
 public class JsonLDException extends Exception {
 
-    private JsonLdError ex;
+    private final JsonLdError ex;
 
     public JsonLDException(JsonLdError ex) {
         super(ex.getMessage(), ex);

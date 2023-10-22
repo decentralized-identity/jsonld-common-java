@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,19 +25,19 @@ public class NormalizationAlgorithmTest {
 
 		try {
 
-			JsonDocument jsonDocument1 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("security-v1.jsonld"));
+			JsonDocument jsonDocument1 = JsonDocument.of(MediaType.JSON_LD, Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("security-v1.jsonld")));
 			jsonDocument1.setDocumentUrl(URI.create("https://w3id.org/security/v1"));
 
-			JsonDocument jsonDocument2 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("security-v2.jsonld"));
+			JsonDocument jsonDocument2 = JsonDocument.of(MediaType.JSON_LD, Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("security-v2.jsonld")));
 			jsonDocument2.setDocumentUrl(URI.create("https://w3id.org/security/v2"));
 
-			JsonDocument jsonDocument3 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("security-v3-unstable.jsonld"));
+			JsonDocument jsonDocument3 = JsonDocument.of(MediaType.JSON_LD, Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("security-v3-unstable.jsonld")));
 			jsonDocument3.setDocumentUrl(URI.create("https://w3id.org/security/v3"));
 
-			JsonDocument jsonDocument4 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v1.jsonld"));
+			JsonDocument jsonDocument4 = JsonDocument.of(MediaType.JSON_LD, Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v1.jsonld")));
 			jsonDocument4.setDocumentUrl(URI.create("https://www.w3.org/2018/credentials/v1"));
 
-			JsonDocument jsonDocument5 = JsonDocument.of(MediaType.JSON_LD, NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v2-unstable.jsonld"));
+			JsonDocument jsonDocument5 = JsonDocument.of(MediaType.JSON_LD, Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("credentials-v2-unstable.jsonld")));
 			jsonDocument5.setDocumentUrl(URI.create("https://www.w3.org/2018/credentials/v2"));
 
 			localCache.put(jsonDocument1.getDocumentUrl(), jsonDocument1);
@@ -56,7 +57,7 @@ public class NormalizationAlgorithmTest {
 	@SuppressWarnings("unchecked")
 	public void testNormalizationInput() throws Throwable {
 
-		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.jsonld")));
+		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("input.jsonld"))));
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.normalized"));
 
@@ -67,7 +68,7 @@ public class NormalizationAlgorithmTest {
 	@SuppressWarnings("unchecked")
 	public void testNormalizationSigned() throws Throwable {
 
-		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.jsonld")));
+		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.jsonld"))));
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("signed.good.rsa.normalized"));
 
@@ -78,7 +79,7 @@ public class NormalizationAlgorithmTest {
 	@SuppressWarnings("unchecked")
 	public void testNormalizationVerifiableCredential() throws Throwable {
 
-		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.jsonld")));
+		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.jsonld"))));
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vc.normalized"));
 
@@ -89,7 +90,7 @@ public class NormalizationAlgorithmTest {
 	@SuppressWarnings("unchecked")
 	public void testNormalizationVerifiablePresentation() throws Throwable {
 
-		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.jsonld")));
+		JsonLDObject jsonLdObject = JsonLDObject.fromJson(new InputStreamReader(Objects.requireNonNull(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.jsonld"))));
 		jsonLdObject.setDocumentLoader(documentLoader);
 		String normalizedDocument = TestUtil.read(NormalizationAlgorithmTest.class.getResourceAsStream("input.vp.normalized"));
 

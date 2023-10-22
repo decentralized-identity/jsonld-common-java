@@ -30,11 +30,11 @@ public class ConfigurableDocumentLoader implements DocumentLoader {
     private boolean enableHttps = false;
     private boolean enableFile = false;
 
-    private Map<URI, JsonDocument> localCache = new HashMap<URI, JsonDocument> ();
+    private Map<URI, JsonDocument> localCache = new HashMap<>();
     private Cache<URI, Document> remoteCache = null;
-    private List<URI> httpContexts = new ArrayList<URI>();
-    private List<URI> httpsContexts = new ArrayList<URI>();
-    private List<URI> fileContexts = new ArrayList<URI>();
+    private List<URI> httpContexts = new ArrayList<>();
+    private List<URI> httpsContexts = new ArrayList<>();
+    private List<URI> fileContexts = new ArrayList<>();
 
     public static final DocumentLoader DOCUMENT_LOADER;
 

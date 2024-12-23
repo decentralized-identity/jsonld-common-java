@@ -30,6 +30,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JsonLDObject {
@@ -229,7 +230,28 @@ public class JsonLDObject {
 			Method method = cl.getMethod("fromMap", Map.class);
 			return (C) method.invoke(null, jsonObject);
 		} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
-			throw new Error(ex);
+			throw new RuntimeException(ex);
+		}
+	}
+
+	public static <C extends JsonLDObject> List<C> getFromJsonLDObjectAsList(Class<C> cl, JsonLDObject jsonLdObject) {
+		String term = getDefaultJsonLDPredicate(cl);
+		Object jsonValue = JsonLDUtils.jsonLdGetJsonValue(jsonLdObject.getJsonObject(), term);
+		if (jsonValue == null) return null;
+		if (jsonValue instanceof Map) {
+			jsonValue = Collections.singletonList(jsonValue);
+		}
+		if (jsonValue instanceof List jsonValueList) {
+			return ((List<Map<String, Object>>) jsonValueList).stream().map(jsonObject -> {
+				try {
+					Method method = cl.getMethod("fromMap", Map.class);
+					return (C) method.invoke(null, jsonObject);
+				} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
+					throw new RuntimeException(ex);
+				}
+			}).toList();
+		} else {
+			throw new IllegalArgumentException("Cannot get JSON-LD object '" + term + "' from " + jsonLdObject);
 		}
 	}
 
@@ -384,7 +406,7 @@ public class JsonLDObject {
 			Field field = cl.getField("DEFAULT_DOCUMENT_LOADER");
 			return (DocumentLoader) field.get(null);
 		} catch (IllegalAccessException | NoSuchFieldException ex) {
-			throw new Error(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -393,7 +415,7 @@ public class JsonLDObject {
 			Field field = cl.getField("DEFAULT_JSONLD_CONTEXTS");
 			return Arrays.asList((URI[]) field.get(null));
 		} catch (IllegalAccessException | NoSuchFieldException ex) {
-			throw new Error(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -402,7 +424,7 @@ public class JsonLDObject {
 			Field field = cl.getField("DEFAULT_JSONLD_TYPES");
 			return Arrays.asList((String[]) field.get(null));
 		} catch (IllegalAccessException | NoSuchFieldException ex) {
-			throw new Error(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -411,7 +433,7 @@ public class JsonLDObject {
 			Field field = cl.getField("DEFAULT_JSONLD_PREDICATE");
 			return (String) field.get(null);
 		} catch (IllegalAccessException | NoSuchFieldException ex) {
-			throw new Error(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 

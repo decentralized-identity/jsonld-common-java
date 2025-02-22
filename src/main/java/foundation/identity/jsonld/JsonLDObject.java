@@ -9,6 +9,8 @@ import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.lang.Keywords;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
+import com.apicatalog.rdf.RdfNQuad;
+import com.apicatalog.rdf.canon.RdfCanonicalizer;
 import com.apicatalog.rdf.io.nquad.NQuadsWriter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -16,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import io.setl.rdf.normalization.RdfNormalize;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
@@ -30,7 +31,6 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class JsonLDObject {
@@ -341,13 +341,13 @@ public class JsonLDObject {
 	 */
 
 	public RdfDataset toDataset() throws JsonLDException {
-
 		JsonLdOptions options = this.getDocumentLoader() != null ? new JsonLdOptions(this.getDocumentLoader()) : new JsonLdOptions();
 		options.setOrdered(true);
 
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.toJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
 		toRdfApi.options(options);
+
 		try {
 			return toRdfApi.get();
 		} catch (JsonLdError ex) {
@@ -356,7 +356,6 @@ public class JsonLDObject {
 	}
 
 	public String toNQuads() throws JsonLDException, IOException {
-
 		RdfDataset rdfDataset = this.toDataset();
 		StringWriter stringWriter = new StringWriter();
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
@@ -365,7 +364,6 @@ public class JsonLDObject {
 	}
 
 	public String toJson(boolean pretty) {
-
 		ObjectWriter objectWriter = pretty ? objectWriterPretty : objectWriterDefault;
 		try {
 			return objectWriter.writeValueAsString(this.getJsonObject());
@@ -375,17 +373,15 @@ public class JsonLDObject {
 	}
 
 	public String toJson() {
-
 		return this.toJson(false);
 	}
 
 	public String normalize(String algorithm) throws JsonLDException, NoSuchAlgorithmException, IOException {
-
 		RdfDataset rdfDataset = this.toDataset();
-		rdfDataset = RdfNormalize.normalize(rdfDataset, algorithm);
+		Collection<RdfNQuad> rdfNQuads = RdfCanonicalizer.canonicalize(rdfDataset.toList());
 		StringWriter stringWriter = new StringWriter();
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
-		nQuadsWriter.write(rdfDataset);
+		for (RdfNQuad rdfNQuad : rdfNQuads) nQuadsWriter.write(rdfNQuad);
 		return stringWriter.getBuffer().toString();
 	}
 

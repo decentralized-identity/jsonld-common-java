@@ -171,18 +171,12 @@
 		<dependency>
 			<groupId>com.apicatalog</groupId>
 			<artifactId>titanium-json-ld</artifactId>
-			<version>1.4.1</version>
+			<version>1.5.0</version>
 		</dependency>
 		<dependency>
-			<groupId>io.setl</groupId>
-			<artifactId>rdf-urdna</artifactId>
-			<version>1.4</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.apicatalog</groupId>
-					<artifactId>titanium-json-ld-jre8</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>com.apicatalog</groupId>
+			<artifactId>titanium-rdfc</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish</groupId>

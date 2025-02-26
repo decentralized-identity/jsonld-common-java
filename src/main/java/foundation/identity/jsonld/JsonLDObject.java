@@ -376,6 +376,15 @@ public class JsonLDObject {
 		return this.toJson(false);
 	}
 
+	public String normalize(String algorithm) throws JsonLDException, NoSuchAlgorithmException, IOException {
+		RdfDataset rdfDataset = this.toDataset();
+		Collection<RdfNQuad> rdfNQuads = RdfCanonicalizer.canonicalize(rdfDataset.toList());
+		StringWriter stringWriter = new StringWriter();
+		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
+		for (RdfNQuad rdfNQuad : rdfNQuads) nQuadsWriter.write(rdfNQuad);
+		return stringWriter.getBuffer().toString();
+	}
+
 	public Map<String, Object> toMap() {
 		return this.getJsonObject();
 	}

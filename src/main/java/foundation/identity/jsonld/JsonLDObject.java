@@ -9,9 +9,10 @@ import com.apicatalog.jsonld.http.media.MediaType;
 import com.apicatalog.jsonld.lang.Keywords;
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.apicatalog.rdf.RdfDataset;
-import com.apicatalog.rdf.RdfNQuad;
-import com.apicatalog.rdf.canon.RdfCanonicalizer;
-import com.apicatalog.rdf.io.nquad.NQuadsWriter;
+import com.apicatalog.rdf.api.RdfConsumerException;
+import com.apicatalog.rdf.api.RdfQuadConsumer;
+import com.apicatalog.rdf.canon.RdfCanon;
+import com.apicatalog.rdf.nquads.NQuadsWriter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -340,26 +341,31 @@ public class JsonLDObject {
 	 * Writing the JSON-LD object
 	 */
 
-	public RdfDataset toDataset() throws JsonLDException {
+	public ToRdfApi toRdfApi() {
 		JsonLdOptions options = this.getDocumentLoader() != null ? new JsonLdOptions(this.getDocumentLoader()) : new JsonLdOptions();
 		options.setOrdered(true);
-
 		JsonDocument jsonDocument = JsonDocument.of(MediaType.JSON_LD, this.toJsonObject());
 		ToRdfApi toRdfApi = JsonLd.toRdf(jsonDocument);
 		toRdfApi.options(options);
+		return toRdfApi;
+	}
 
+	public RdfDataset toDataset() throws JsonLDException {
 		try {
-			return toRdfApi.get();
+			return this.toRdfApi().get();
 		} catch (JsonLdError ex) {
 			throw new JsonLDException(ex);
 		}
 	}
 
 	public String toNQuads() throws JsonLDException, IOException {
-		RdfDataset rdfDataset = this.toDataset();
 		StringWriter stringWriter = new StringWriter();
 		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
-		nQuadsWriter.write(rdfDataset);
+        try {
+            this.toRdfApi().provide(nQuadsWriter);
+		} catch (JsonLdError ex) {
+			throw new JsonLDException(ex);
+		}
 		return stringWriter.toString();
 	}
 
@@ -377,12 +383,20 @@ public class JsonLDObject {
 	}
 
 	public String normalize() throws JsonLDException, IOException {
-		RdfDataset rdfDataset = this.toDataset();
-		Collection<RdfNQuad> rdfNQuads = RdfCanonicalizer.canonicalize(rdfDataset.toList());
+		RdfCanon rdfCanon = RdfCanon.create("SHA-256");
 		StringWriter stringWriter = new StringWriter();
-		NQuadsWriter nQuadsWriter = new NQuadsWriter(stringWriter);
-		for (RdfNQuad rdfNQuad : rdfNQuads) nQuadsWriter.write(rdfNQuad);
-		return stringWriter.getBuffer().toString();
+		RdfQuadConsumer nQuadsWriter = new NQuadsWriter(stringWriter);
+
+        try {
+            this.toRdfApi().provide(rdfCanon);
+			rdfCanon.provide(nQuadsWriter);
+        } catch (RdfConsumerException ex) {
+            throw new IOException("Cannot consume RDF: " + ex.getMessage(), ex);
+        } catch (JsonLdError ex) {
+			throw new JsonLDException(ex);
+        }
+
+        return stringWriter.getBuffer().toString();
 	}
 
 	public String normalize(String algorithm) throws JsonLDException, NoSuchAlgorithmException, IOException {
